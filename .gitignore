@@ -1,0 +1,18 @@
+# Private Workshop data: back up separately; never add to the core source repository.
+/projects/
+/memory/
+/usage-log.jsonl
+/ollama-startup.log
+
+# Machine and generated files.
+.DS_Store
+**/.DS_Store
+__pycache__/
+**/__pycache__/
+*.py[cod]
+**/bin/
+**/obj/
+.venv/
+venv/
+**/.venv/
+**/venv/

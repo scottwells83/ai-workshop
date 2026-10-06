@@ -1,0 +1,3 @@
+# Workshop memory
+
+`memory/MEMORY.md` holds durable confirmed facts and standing preferences. `memory/projects.md` holds current project state. `memory/wins-log.md` holds dated outcomes with measurements when known. Read only the relevant file and section. Treat items marked proposed or waiting on a decision as unsettled. Verify changeable facts before using them. Add the source and date when recording a new decision. Make minimal edits; preserve earlier facts unless contradicted by a newer confirmed source. Never store credentials, one-time codes, identity numbers, or customer data. If a conflict is material, ask Scott rather than choosing silently.

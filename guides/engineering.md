@@ -1,0 +1,3 @@
+# Engineering work
+
+Understand the objective and inspect only the relevant files. Prefer existing knowledge, exact searches, deterministic checks, small patches, and existing patterns. Preserve supplied originals and unrelated edits. Use a plan when it helps, then complete the reversible implementation authorized by the user's request. Ask for a decision only when missing information changes the result or an external or irreversible action is not authorized. Run the least expensive checks that provide sufficient confidence, report their limits, and stop when done. Use Codex when repository context, code edits, or developer tools are central to the task; otherwise use a local-capable Work session when files or commands are needed.
