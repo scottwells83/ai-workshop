@@ -331,13 +331,18 @@ def usage_summary(project_filter: str | None = None, since: str | None = None) -
         category = job.get("category", "uncategorized")
         bucket = categories.setdefault(category, {
             "runs": 0, "prompt_tokens": 0, "response_tokens": 0,
+            "events_with_token_counts": 0, "token_counts_unavailable": 0,
             "elapsed_seconds": 0.0, "accepted": 0, "rejected": 0,
             "rework": 0, "unreviewed": 0, "_review_seconds": 0.0,
             "reviewed_runs_with_time": 0,
         })
         bucket["runs"] += 1
-        bucket["prompt_tokens"] += job.get("prompt_tokens") or 0
-        bucket["response_tokens"] += job.get("response_tokens") or 0
+        if isinstance(job.get("prompt_tokens"), int) and isinstance(job.get("response_tokens"), int):
+            bucket["prompt_tokens"] += job["prompt_tokens"]
+            bucket["response_tokens"] += job["response_tokens"]
+            bucket["events_with_token_counts"] += 1
+        else:
+            bucket["token_counts_unavailable"] += 1
         bucket["elapsed_seconds"] += job.get("elapsed_seconds") or 0
         outcome = qa_by_run.get((job.get("project"), job.get("job_id"), job.get("run_at")))
         if outcome is None:
@@ -349,6 +354,9 @@ def usage_summary(project_filter: str | None = None, since: str | None = None) -
                 bucket["reviewed_runs_with_time"] += 1
     for bucket in categories.values():
         bucket["elapsed_seconds"] = round(bucket["elapsed_seconds"], 3)
+        if not bucket["events_with_token_counts"]:
+            bucket["prompt_tokens"] = None
+            bucket["response_tokens"] = None
         bucket["review_seconds"] = (round(bucket.pop("_review_seconds"), 3)
                                      if bucket["reviewed_runs_with_time"] else None)
     summary["local_job_categories"] = categories

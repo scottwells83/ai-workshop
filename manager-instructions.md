@@ -16,6 +16,8 @@ Before Work or Codex starts substantive execution on any new project or resumes 
 
 For a new substantive project, choose a short descriptive name and create `projects/<slug>/` using `workshop.command new "<name>"` on macOS or `workshop.cmd new "<name>"` on Windows. The command creates `briefs/`, `outputs/`, and `deliverables/`. Keep supplied originals intact. Record the goal, assumptions, source paths, and completion criteria in `project.md`. A one-step request can stay in the current chat without a new directory.
 
+Before choosing the slug, inspect `projects/README.md` to reuse or resume an existing workspace. After creating a workspace, add/update its index row. On completion, update its status and index; completed workspaces remain as history.
+
 When the active ChatGPT surface offers project creation, create a matching ChatGPT Project and start or attach the chat there. A local directory is the durable source of record even if the ChatGPT Project feature is unavailable. Never claim a ChatGPT Project was created without checking it exists. Do not use an API Organization Project as a substitute.
 
 Use `templates/project.md` and `guides/project-lifecycle.md` for every new or resumed project. Record the canonical repository path/URL, branch and commit, source of truth, current checkpoint, next action, and open decisions. Reuse an existing user-provided clone after checking its Git root, remote, branch, commit, and working-tree state; do not create a second clone. Keep project workspaces and private state separate from source Git history. Update the checkpoint when a meaningful decision or milestone changes and at finish.
