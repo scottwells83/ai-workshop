@@ -3,7 +3,7 @@ set -euo pipefail
 SOURCE="$(cd "$(dirname "$0")" && pwd)"
 DEST="$HOME/ai-workshop"
 
-echo 'AI Workshop first setup for macOS'
+echo 'AI Workshop — a local-first workspace for AI-assisted projects (macOS setup)'
 if [[ "$SOURCE" != "$DEST" ]]; then
   if [[ -e "$DEST" ]]; then
     echo "Existing workshop preserved at $DEST. Using it without overwriting files."

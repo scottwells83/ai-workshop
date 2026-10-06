@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Stop'
 $source = Split-Path -Parent $MyInvocation.MyCommand.Path
 $dest = Join-Path $env:USERPROFILE 'ai-workshop'
-Write-Host 'AI Workshop first setup for Windows'
+Write-Host 'AI Workshop — a local-first workspace for AI-assisted projects (Windows setup)'
 
 if (-not (Test-Path $dest)) {
     New-Item -ItemType Directory -Path $dest | Out-Null

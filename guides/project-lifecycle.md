@@ -2,7 +2,7 @@
 
 ## Where things live
 
-- Keep this Workshop at its current home-directory location (`~/AI-Workshop` on Scott's Mac; Windows installers use `%USERPROFILE%\\ai-workshop`). The case difference on macOS currently resolves to the same filesystem object. Do not move the live Workshop casually; installers and personal instructions refer to this path.
+- Keep this Workshop at its canonical home-directory location (`~/ai-workshop` on Scott's Mac and `%USERPROFILE%\\ai-workshop` on Windows). Use lowercase `ai-workshop` for paths, repositories, package roots, and machine-facing identifiers; use `AI Workshop` in user-facing prose. Avoid alternate case spellings in current instructions.
 - Treat the Workshop root as the local source/configuration repository. Its Git history must contain only reusable Workshop code, templates, documentation, and agent definitions.
 - Treat `projects/`, `memory/`, and `usage-log.jsonl` as private operating data, never as part of the root source Git repository. The portable personal ZIP includes project and memory state, so store it privately and use it as a data backup, not a public release.
 - Each project has one workspace at `projects/<stable-slug>/` with `project.md`, `jobs.json`, `briefs/`, `outputs/`, and `deliverables/`. Preserve `run-history.jsonl` and older generated outputs as process evidence.

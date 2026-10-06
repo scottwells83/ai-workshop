@@ -1,6 +1,10 @@
 # AI Workshop
 
-This folder is the local source/configuration for a Manager-led AI Workshop. The Manager entry point is `AGENTS.md`; read it only when a workshop task is active. Reusable Workshop files are kept in the root Git history; `projects/`, `memory/`, and `usage-log.jsonl` are private operating data and must stay out of that repository. The Manager creates project workspaces, dispatches bounded local runs, checks results, and delivers finished files. The local models do not have file or command permissions by themselves; the Manager's host environment invokes `workshop.py` for them.
+**A local-first workspace for AI-assisted projects.** AI Workshop keeps project context and source history, routes bounded work to local agents where they fit, and uses commercial AI tools when they add value. The Manager checks the results and records usage and QA so the process can improve over time.
+
+The Manager entry point is `AGENTS.md`; read it only when a workshop task is active. Reusable Workshop files are kept in the root Git history; `projects/`, `memory/`, and `usage-log.jsonl` are private operating data and must stay out of that repository. The Manager creates project workspaces, dispatches bounded local runs, checks results, and delivers finished files. The local models do not have file or command permissions by themselves; the Manager's host environment invokes `workshop.py` for them.
+
+The canonical machine-readable name is `ai-workshop` (folder, repository, package, and service identifiers); the human-facing product name is **AI Workshop**. The source repository is the private GitHub repository [scottwells83/ai-workshop](https://github.com/scottwells83/ai-workshop).
 
 ## First setup
 
