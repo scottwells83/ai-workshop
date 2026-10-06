@@ -288,12 +288,13 @@ def usage_summary(project_filter: str | None = None, since: str | None = None) -
         records = [r for r in records if r.get("project") == project_filter]
     if since:
         records = [r for r in records if r.get("recorded_at", "")[:10] >= since]
+    is_skipped = lambda r: r.get("event_type") == "local_job" and r.get("status") == "skipped"
     surfaces = sorted({r.get("surface", "unknown") for r in records
-                       if r.get("event_type") != "local_job_qa"})
+                       if r.get("event_type") != "local_job_qa" and not is_skipped(r)})
     summary = {"records": len(records), "usage_log": str(USAGE_LOG), "surfaces": {}}
     for surface in surfaces:
         items = [r for r in records if r.get("surface") == surface
-                 and r.get("event_type") != "local_job_qa"]
+                 and r.get("event_type") != "local_job_qa" and not is_skipped(r)]
         measured = [r for r in items
                     if isinstance(r.get("prompt_tokens", r.get("input_tokens")), int)
                     and isinstance(r.get("response_tokens", r.get("output_tokens")), int)]
@@ -313,7 +314,7 @@ def usage_summary(project_filter: str | None = None, since: str | None = None) -
                 for r in items),
         }
     qa = [r for r in records if r.get("event_type") == "local_job_qa"]
-    local_jobs = [r for r in records if r.get("event_type") == "local_job"]
+    local_jobs = [r for r in records if r.get("event_type") == "local_job" and not is_skipped(r)]
     summary["local_job_qa"] = {
         "accepted": sum(r.get("qa_status") == "accepted" for r in qa),
         "rejected": sum(r.get("qa_status") == "rejected" for r in qa),
