@@ -48,11 +48,15 @@ fi
 bash "$DEST/create-agents.sh"
 if ! command -v python3 >/dev/null 2>&1 ||
    ! python3 -c 'import sys; assert sys.version_info >= (3, 11)' >/dev/null 2>&1; then
-  echo 'Installing the uv Python runtime from its official installer...'
-  UV_TMP="$(mktemp)"
-  curl -fsSL https://astral.sh/uv/install.sh -o "$UV_TMP"
-  sh "$UV_TMP"
-  rm -f "$UV_TMP"
+  if [[ -x "$HOME/.local/bin/uv" ]]; then
+    echo 'Using the existing uv Python runtime.'
+  else
+    echo 'Installing the uv Python runtime from its official installer...'
+    UV_TMP="$(mktemp)"
+    curl -fsSL https://astral.sh/uv/install.sh -o "$UV_TMP"
+    sh "$UV_TMP"
+    rm -f "$UV_TMP"
+  fi
 fi
 "$DEST/workshop.command" doctor
 
@@ -81,8 +85,11 @@ if command -v docker >/dev/null 2>&1; then
     sleep 2
   done
   if docker info >/dev/null 2>&1; then
-    if ! docker container inspect ai-workshop-webui >/dev/null 2>&1 &&
-       ! docker container inspect open-webui >/dev/null 2>&1; then
+    if docker container inspect ai-workshop-webui >/dev/null 2>&1; then
+      docker start ai-workshop-webui >/dev/null
+    elif docker container inspect open-webui >/dev/null 2>&1; then
+      docker start open-webui >/dev/null
+    else
       docker run -d --name ai-workshop-webui --restart unless-stopped \
         -p 127.0.0.1:3000:8080 \
         -e OLLAMA_BASE_URL=http://host.docker.internal:11434 \

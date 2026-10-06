@@ -73,12 +73,16 @@ if (-not $validPython -and (Get-Command python -ErrorAction SilentlyContinue)) {
     & python -c 'import sys; assert sys.version_info >= (3, 11)' *> $null
     $validPython = ($LASTEXITCODE -eq 0)
 }
-if (-not $validPython) {
+$uvExe = Join-Path $env:USERPROFILE '.local\bin\uv.exe'
+if (-not $validPython -and -not (Test-Path $uvExe)) {
     Write-Host 'Installing the uv Python runtime from its official installer...'
     $uvInstall = Join-Path $env:TEMP 'ai-workshop-uv-install.ps1'
     Invoke-WebRequest -Uri 'https://astral.sh/uv/install.ps1' -OutFile $uvInstall
     & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $uvInstall
     if ($LASTEXITCODE -ne 0) { throw 'Python runtime installation failed.' }
+}
+if (-not $validPython -and -not (Test-Path $uvExe)) {
+    throw 'Python 3.11+ or uv is required, but the uv runtime was not found after installation.'
 }
 & (Join-Path $dest 'workshop.cmd') doctor
 if ($LASTEXITCODE -ne 0) { throw 'Workshop doctor check failed.' }
@@ -109,7 +113,13 @@ if ($docker) {
         $own = ($LASTEXITCODE -eq 0)
         & docker container inspect open-webui *> $null
         $existing = ($LASTEXITCODE -eq 0)
-        if (-not $own -and -not $existing) {
+        if ($own) {
+            & docker start ai-workshop-webui *> $null
+            if ($LASTEXITCODE -ne 0) { Write-Warning 'Could not start the existing ai-workshop-webui container.' }
+        } elseif ($existing) {
+            & docker start open-webui *> $null
+            if ($LASTEXITCODE -ne 0) { Write-Warning 'Could not start the existing open-webui container.' }
+        } else {
             & docker run -d --name ai-workshop-webui --restart unless-stopped `
                 -p '127.0.0.1:3000:8080' `
                 -e 'OLLAMA_BASE_URL=http://host.docker.internal:11434' `

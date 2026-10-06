@@ -138,7 +138,8 @@ def execute_job(project: Path, job: dict, force: bool) -> dict:
     }
     output = project / "outputs" / f"{job_id}.md"
     if output.exists() and not force:
-        return {**base, "status": "error", "detail": "output exists; rerun with --force",
+        return {**base, "status": "skipped", "output": str(output),
+                "detail": "output already exists; use --force to replace it",
                 "elapsed_seconds": round(time.perf_counter() - started, 3)}
     brief = (project / "briefs" / job["brief"]).read_text(encoding="utf-8")
     if not brief.strip():
@@ -183,7 +184,7 @@ def run_jobs(project: Path, force: bool) -> int:
     results: dict[str, dict] = {}
     while pending:
         ready = [job for job in pending.values()
-                 if all(results.get(dep, {}).get("status") == "completed"
+                 if all(results.get(dep, {}).get("status") in {"completed", "skipped"}
                         for dep in job.get("depends_on", []))]
         if not ready:
             for job_id in pending:
@@ -203,6 +204,7 @@ def run_jobs(project: Path, force: bool) -> int:
         "totals": {
             "jobs": len(ordered_results),
             "completed": sum(r["status"] == "completed" for r in ordered_results),
+            "skipped": sum(r["status"] == "skipped" for r in ordered_results),
             "prompt_tokens": sum(r.get("prompt_tokens") or 0 for r in ordered_results),
             "response_tokens": sum(r.get("response_tokens") or 0 for r in ordered_results),
             "elapsed_seconds": round(sum(r.get("elapsed_seconds", 0) for r in ordered_results), 3),
@@ -224,7 +226,7 @@ def run_jobs(project: Path, force: bool) -> int:
             "elapsed_seconds": result.get("elapsed_seconds"),
             "qa_status": "pending",
         })
-    failed = [r for r in report["results"] if r["status"] != "completed"]
+    failed = [r for r in report["results"] if r["status"] not in {"completed", "skipped"}]
     print(f"Run report: {project / 'run-report.json'}")
     print(f"Run history: {history_path}")
     return 1 if failed else 0
