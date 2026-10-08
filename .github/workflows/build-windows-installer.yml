@@ -22,6 +22,7 @@ on:
       - 'manager-instructions.md'
       - 'chatgpt-custom-instructions.md'
       - 'universal-custom-instructions.md'
+      - 'gemini-ai-workshop-instructions.md'
       - '.github/copilot-instructions.md'
       - 'RELEASE_NOTES.md'
       - 'RELEASE_READINESS.md'

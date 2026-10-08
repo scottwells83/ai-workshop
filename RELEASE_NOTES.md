@@ -6,7 +6,7 @@ This is a prerelease build in [pull request #1](https://github.com/scottwells83/
 
 ## What changed
 
-- `universal-custom-instructions.md` is the single copy-ready instruction set for ChatGPT, Codex, Claude, Gemini, Meta Muse, OpenCode, Cursor, and GitHub Copilot on Windows, macOS, and Linux. The earlier `chatgpt-custom-instructions.md` now points to it.
+- `universal-custom-instructions.md` is the canonical copy-ready instruction set for ChatGPT, Codex, Claude, Gemini, Meta Muse, OpenCode, Cursor, and GitHub Copilot on Windows, macOS, and Linux. The Gemini-focused Markdown copy is `gemini-ai-workshop-instructions.md`; the earlier `chatgpt-custom-instructions.md` points to the canonical file.
 - The Windows, macOS, and Linux installers include the shared file. On a fresh setup, they copy it to Codex, OpenCode, and GitHub Copilot CLI user-level instruction files only when absent. Existing personal instructions are preserved. Cursor uses the Workshop's root `AGENTS.md`; its optional global User Rules are set inside Cursor.
 - A short `.github/copilot-instructions.md` gives GitHub Copilot on the repository an entry point to the Workshop's shared Manager instructions.
 - The shared text tells assistants to find AI Workshop, use its manager and relevant guides, inspect project state, consider local agents, run available tools themselves, verify outputs, and report unavailable access honestly.
