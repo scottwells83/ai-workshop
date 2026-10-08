@@ -1,0 +1,41 @@
+#!/usr/bin/env python3
+"""Stage a macOS disk image without personal Workshop state."""
+
+from pathlib import Path
+import shutil
+import sys
+
+ROOT = Path(__file__).resolve().parents[2]
+if len(sys.argv) != 2:
+    raise SystemExit("Usage: stage.py STAGING_DIRECTORY")
+DEST = Path(sys.argv[1]).resolve()
+if DEST == ROOT or ROOT in DEST.parents:
+    raise SystemExit("Staging directory must be outside the Workshop source")
+if DEST.exists():
+    shutil.rmtree(DEST)
+PAYLOAD = DEST / "ai-workshop"
+PAYLOAD.mkdir(parents=True)
+
+FILES = (
+    "AGENTS.md", "manager-instructions.md", "chatgpt-custom-instructions.md",
+    "README.md", "Modelfile", "Modelfile.drafter", "workshop.py",
+    "workshop.command", "Install AI Workshop.command", "create-agents.sh",
+    "templates/project.md",
+)
+for name in FILES:
+    target = PAYLOAD / name
+    target.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(ROOT / name, target)
+for name in ("agents", "guides"):
+    shutil.copytree(ROOT / name, PAYLOAD / name)
+for name in ("projects", "memory"):
+    (PAYLOAD / name).mkdir()
+(PAYLOAD / "projects" / "README.md").write_text("# AI Workshop projects\n", encoding="utf-8")
+(DEST / "START HERE.txt").write_text(
+    "Open the ai-workshop folder and double-click Install AI Workshop.command.\n"
+    "Setup downloads Ollama, model weights, and Python when needed. Internet access is required.\n"
+    "Docker Desktop and Open WebUI are optional. Existing ~/ai-workshop files are preserved.\n"
+    "This disk image is unsigned; macOS may ask you to approve opening it.\n",
+    encoding="utf-8",
+)
+print(DEST)

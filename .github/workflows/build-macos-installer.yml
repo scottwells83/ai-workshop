@@ -1,0 +1,40 @@
+name: Build macOS installer
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/build-macos-installer.yml'
+      - 'installer/macos/**'
+      - 'Install AI Workshop.command'
+      - 'create-agents.sh'
+      - 'workshop.command'
+      - 'workshop.py'
+      - 'Modelfile*'
+      - 'agents/**'
+      - 'guides/**'
+      - 'templates/**'
+      - 'AGENTS.md'
+      - 'manager-instructions.md'
+      - 'chatgpt-custom-instructions.md'
+      - 'README.md'
+
+jobs:
+  build:
+    runs-on: macos-15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check launcher syntax
+        run: bash -n 'Install AI Workshop.command' create-agents.sh workshop.command installer/macos/build.sh
+      - name: Build and verify disk image
+        run: bash installer/macos/build.sh
+      - name: Hash disk image
+        run: shasum -a 256 dist/macos/AI-Workshop-macOS.dmg
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-workshop-macos-installer
+          path: dist/macos/AI-Workshop-macOS.dmg
+          if-no-files-found: error
