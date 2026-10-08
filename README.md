@@ -19,7 +19,7 @@ Draw Things is optional and currently available for Apple devices; it is not req
 
 ## Using the Manager
 
-Open the `ai-workshop` folder in a local-capable ChatGPT Work or Codex session and say what you want to do. For an ordinary ChatGPT chat, the short text in `chatgpt-custom-instructions.md` can start intake, but a chat without local access cannot execute the runner. In Codex, this folder's `AGENTS.md` is discovered as project guidance. A ChatGPT Project is created only when the active product surface exposes that capability; the Manager must confirm it exists.
+Open the `ai-workshop` folder in a local-capable AI session and say what you want to do. Use the copy-ready text in `universal-custom-instructions.md` in Codex, Claude, Gemini, Muse, or another assistant's personal-instruction field. A chat without local access cannot execute the runner. In Codex, this folder's `AGENTS.md` is discovered as project guidance. A ChatGPT Project is created only when the active product surface exposes that capability; the Manager must confirm it exists.
 
 ## Portability
 

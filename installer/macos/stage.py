@@ -18,7 +18,8 @@ PAYLOAD.mkdir(parents=True)
 
 FILES = (
     "AGENTS.md", "manager-instructions.md", "chatgpt-custom-instructions.md",
-    "README.md", "Modelfile", "Modelfile.drafter", "workshop.py",
+    "universal-custom-instructions.md",
+    "README.md", "RELEASE_NOTES.md", "Modelfile", "Modelfile.drafter", "workshop.py",
     "workshop.command", "Install AI Workshop.command", "create-agents.sh",
     "templates/project.md",
 )

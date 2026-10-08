@@ -4,7 +4,7 @@ The package contains AI Workshop instructions, model definitions, a local runner
 
 Draw Things is optional on macOS and is not a current workshop dependency. There is no supported Windows Draw Things installation in this package. Do not copy Ollama model blobs or Docker volumes between computers. Recreate models from Modelfiles. Transfer personal memory and project files only through a user-chosen private channel; never put them in a public distribution.
 
-The local runner works without Open WebUI. The installer does not configure account-wide ChatGPT custom instructions. Use `chatgpt-custom-instructions.md` as the short text to apply through ChatGPT Personalization; open the workshop folder in a local-capable session. Codex discovers this directory's `AGENTS.md` when started here.
+The local runner works without Open WebUI. The installer does not configure account-wide custom instructions. Copy the text in `universal-custom-instructions.md` into the personal-instruction field of Codex, Claude, Gemini, Muse, or another assistant. Open the workshop folder in a local-capable session. Codex discovers this directory's `AGENTS.md` when started here.
 
 ## Windows installer build
 

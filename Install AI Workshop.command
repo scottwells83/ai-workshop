@@ -16,7 +16,7 @@ fi
 
 mkdir -p "$HOME/.codex"
 if [[ ! -e "$HOME/.codex/AGENTS.md" ]]; then
-  cp "$DEST/chatgpt-custom-instructions.md" "$HOME/.codex/AGENTS.md"
+  cp "$DEST/universal-custom-instructions.md" "$HOME/.codex/AGENTS.md"
   echo 'Added the short Codex entry instructions.'
 fi
 

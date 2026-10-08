@@ -15,7 +15,7 @@ $codexDir = Join-Path $env:USERPROFILE '.codex'
 $codexInstructions = Join-Path $codexDir 'AGENTS.md'
 if (-not (Test-Path $codexInstructions)) {
     New-Item -ItemType Directory -Path $codexDir -Force | Out-Null
-    Copy-Item (Join-Path $dest 'chatgpt-custom-instructions.md') $codexInstructions
+    Copy-Item (Join-Path $dest 'universal-custom-instructions.md') $codexInstructions
     Write-Host 'Added the short Codex entry instructions.'
 }
 

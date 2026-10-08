@@ -17,6 +17,8 @@ on:
       - 'AGENTS.md'
       - 'manager-instructions.md'
       - 'chatgpt-custom-instructions.md'
+      - 'universal-custom-instructions.md'
+      - 'RELEASE_NOTES.md'
       - 'README.md'
 
 jobs:
