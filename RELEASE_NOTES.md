@@ -12,6 +12,7 @@ This is a prerelease build in [pull request #1](https://github.com/scottwells83/
 - The shared text tells assistants to find AI Workshop, use its manager and relevant guides, inspect project state, consider local agents, run available tools themselves, verify outputs, and report unavailable access honestly.
 - The installers stage reusable Workshop files without personal projects, memory, usage logs, or model blobs.
 - The local app now accepts model-produced five-part briefs in heading or mapping form. The Manager retries work after a tool error and checks bedtime story drafts for common pressure language before answering; this is an aid to review, not a guarantee about an individual child's triggers.
+- The local app keeps the page and prompt composer fixed while the conversation pane scrolls to the newest response, including on narrow screens.
 - The Linux `.run` installer now packages the same clean Workshop instructions and runner. It installs core dependencies on first run and provides a `--verify-only` package check.
 
 ## Install AI Workshop
