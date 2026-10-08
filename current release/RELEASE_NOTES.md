@@ -15,7 +15,7 @@ AI Workshop now has a testable desktop workspace and installers for Windows, mac
 
 ## Build verification
 
-The [Windows](https://github.com/scottwells83/ai-workshop/actions/runs/37814709879), [macOS](https://github.com/scottwells83/ai-workshop/actions/runs/37814709830), and [Linux](https://github.com/scottwells83/ai-workshop/actions/runs/37814710009) workflows succeeded for the release source. The downloaded macOS DMG passed `hdiutil verify`. The Linux workflow passed its `--verify-only` package check. The three repository copies match the hashes in [SHA256SUMS](SHA256SUMS).
+The [Windows](https://github.com/scottwells83/ai-workshop/actions/runs/37816874381), [macOS](https://github.com/scottwells83/ai-workshop/actions/runs/37816874291), and [Linux](https://github.com/scottwells83/ai-workshop/actions/runs/37816874407) workflows succeeded for the release source. The downloaded macOS DMG passed `hdiutil verify`. The Linux workflow passed its `--verify-only` package check. The three repository copies match the hashes in [SHA256SUMS](SHA256SUMS).
 
 These checks establish build and package integrity. Windows and Linux desktop behavior, dependency installation, model creation, permissions, and clean-machine first run remain unverified. The installers are unsigned; the macOS DMG is also unnotarized.
 
