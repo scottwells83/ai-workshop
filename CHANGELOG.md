@@ -2,6 +2,11 @@
 
 This file records user-facing AI Workshop changes. Keep entries factual and update it when code, installers, or release documents change. The [current release](https://github.com/scottwells83/ai-workshop/tree/main/current%20release/) folder contains the installers and documents intended for download.
 
+## October 8 2026 Ollama base-model recovery
+
+- Windows setup now checks the `llama3.2:3b` and `llama3.1:8b` base models before creating Workshop agents. It pulls a base model when Ollama cannot read it, then verifies it again.
+- This addresses a Windows 11 setup log where Ollama listed `llama3.2:3b` but its required configuration blob was missing. Setup still requires a destination-machine retry to confirm recovery.
+
 ## October 8 2026 Windows installer diagnostics
 
 - Added a persistent Windows setup log at `%LOCALAPPDATA%\AI Workshop\setup.log` and named the failing setup step in dependency errors.

@@ -76,6 +76,32 @@ for ($i = 0; $i -lt 30; $i++) {
 try { Invoke-RestMethod -Uri 'http://127.0.0.1:11434/api/tags' -TimeoutSec 2 | Out-Null }
 catch { throw 'Ollama did not start. Start the Ollama app and rerun this installer.' }
 
+function Test-OllamaBaseModel([string]$name) {
+    $output = Join-Path $env:TEMP "ai-workshop-ollama-show-$PID.out"
+    $errors = Join-Path $env:TEMP "ai-workshop-ollama-show-$PID.err"
+    try {
+        $process = Start-Process -FilePath $ollama.Source -ArgumentList @('show', $name, '--modelfile') `
+            -Wait -PassThru -NoNewWindow -RedirectStandardOutput $output -RedirectStandardError $errors
+        if ($process.ExitCode -eq 0) { return $true }
+        if (Test-Path $errors) { Get-Content $errors | ForEach-Object { Write-Host $_ } }
+        return $false
+    } finally {
+        Remove-Item $output, $errors -Force -ErrorAction SilentlyContinue
+    }
+}
+
+$baseModels = @('llama3.2:3b', 'llama3.1:8b')
+foreach ($base in $baseModels) {
+    $stage = "checking Ollama base model $base"
+    if (-not (Test-OllamaBaseModel $base)) {
+        Write-Host "Base model $base is missing or incomplete. Downloading its required layers..."
+        $stage = "repairing Ollama base model $base"
+        & $ollama.Source pull $base
+        if ($LASTEXITCODE -ne 0) { throw "Could not download base model $base. Check network access and free disk space." }
+        if (-not (Test-OllamaBaseModel $base)) { throw "Base model $base is still unreadable after download. Preserve the Ollama model files and share the setup log for diagnosis." }
+    }
+}
+
 $stage = 'creating required Ollama models'
 $models = @(
     @('local-worker', 'Modelfile'),
@@ -92,11 +118,11 @@ foreach ($item in $models) {
     if ($LASTEXITCODE -ne 0) { throw "Model creation failed: $($item[0])" }
 }
 $installedNames = @((Invoke-RestMethod -Uri 'http://127.0.0.1:11434/api/tags' -TimeoutSec 5).models | ForEach-Object { $_.name })
-if ($installedNames -contains 'qwen3:32b') {
+if (($installedNames -contains 'qwen3:32b') -and (Test-OllamaBaseModel 'qwen3:32b')) {
     & $ollama.Source create local-reviewer -f (Join-Path $dest 'agents\Modelfile.reviewer')
-    if ($LASTEXITCODE -ne 0) { throw 'Optional local-reviewer model creation failed.' }
+    if ($LASTEXITCODE -ne 0) { Write-Warning 'Optional local-reviewer model creation failed; required models remain available.' }
 } else {
-    Write-Host 'Skipping optional local-reviewer because qwen3:32b is not installed.'
+    Write-Host 'Skipping optional local-reviewer because qwen3:32b is absent or unreadable.'
 }
 
 $stage = 'installing Python runtime'
