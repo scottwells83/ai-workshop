@@ -11,6 +11,7 @@ This is a prerelease build in [pull request #1](https://github.com/scottwells83/
 - A short `.github/copilot-instructions.md` gives GitHub Copilot on the repository an entry point to the Workshop's shared Manager instructions.
 - The shared text tells assistants to find AI Workshop, use its manager and relevant guides, inspect project state, consider local agents, run available tools themselves, verify outputs, and report unavailable access honestly.
 - The installers stage reusable Workshop files without personal projects, memory, usage logs, or model blobs.
+- The local app now accepts model-produced five-part briefs in heading or mapping form. The Manager retries work after a tool error and checks bedtime story drafts for common pressure language before answering; this is an aid to review, not a guarantee about an individual child's triggers.
 - The Linux `.run` installer now packages the same clean Workshop instructions and runner. It installs core dependencies on first run and provides a `--verify-only` package check.
 
 ## Install AI Workshop

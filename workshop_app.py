@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import argparse
+import ast
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import os
+import re
 from pathlib import Path
 import secrets
 import subprocess
@@ -25,6 +27,8 @@ PREFERENCES = ROOT / "app-preferences.json"
 MAX_BODY = 1024 * 1024
 MAX_FILE = 120_000
 SAFE_CHECKS = {"rg", "ls", "pwd", "file", "shasum", "sha256sum", "git", "python", "python3", "bash"}
+BRIEF_HEADINGS = ("Task", "Context", "Constraints", "Deliverable", "Definition of done")
+PDA_PRESSURE = re.compile(r"\b(?:time for bed|it['’]?s time to|you need to|she needed to|you have to|must|should|no choice|free of PDA triggers|let['’]?s make sure|every night|do you know why|didn['’]?t want to stop|remember,|close your eyes|take deep breaths|let your body rest)\b", re.I)
 
 
 def now() -> str:
@@ -149,7 +153,48 @@ def outside_help(app: "App", task: str, context: str) -> dict:
     return {"provider": kind, "model": cfg["model"], "answer": answer.strip(), "usage": usage}
 
 
-def do_tool(app: "App", project: Path, name: str, args: dict) -> dict:
+def normalize_brief(value: object, request: str) -> str:
+    """Accept model-produced heading text or a mapping and store canonical brief text."""
+    if isinstance(value, str):
+        value = value.strip()
+        if value.startswith("{"):
+            for parser in (json.loads, ast.literal_eval):
+                try:
+                    parsed = parser(value)
+                    if isinstance(parsed, dict):
+                        value = parsed
+                        break
+                except (ValueError, SyntaxError, TypeError, json.JSONDecodeError):
+                    pass
+    if isinstance(value, dict):
+        fields = {str(k).strip().lower().rstrip(":"): str(v).strip() for k, v in value.items()}
+        if all(fields.get(h.lower()) for h in BRIEF_HEADINGS):
+            return "\n\n".join(f"{h}\n{fields[h.lower()]}" for h in BRIEF_HEADINGS) + "\n"
+    if isinstance(value, str) and value:
+        pattern = r"(?im)^\s*(?:#{1,3}\s*)?(Task|Context|Constraints|Deliverable|Definition of done)\s*:?\s*(.*)$"
+        matches = list(re.finditer(pattern, value))
+        fields = {}
+        for index, match in enumerate(matches):
+            end = matches[index + 1].start() if index + 1 < len(matches) else len(value)
+            fields[match.group(1).lower()] = (match.group(2) + "\n" + value[match.end():end]).strip()
+        if all(fields.get(h.lower()) for h in BRIEF_HEADINGS):
+            return "\n\n".join(f"{h}\n{fields[h.lower()]}" for h in BRIEF_HEADINGS) + "\n"
+        if request.strip():
+            return (f"Task\n{request.strip()}\n\nContext\n{value[:4000]}\n\n"
+                    "Constraints\nHonor the user's stated requirements and do not invent personal facts.\n\n"
+                    "Deliverable\nA complete draft responsive to the task.\n\n"
+                    "Definition of done\nCheck the draft against the user's request and identify uncertainty.\n")
+    raise ValueError("Brief is empty or cannot be normalized")
+
+
+def draft_warnings(request: str, draft: str) -> list[str]:
+    if not re.search(r"\b(?:PDA|pathological demand avoidance)\b", request, re.I):
+        return []
+    matches = list(dict.fromkeys(match.group(0) for match in PDA_PRESSURE.finditer(draft)))
+    return (["Potentially pressuring bedtime language: " + ", ".join(matches)] if matches else [])
+
+
+def do_tool(app: "App", project: Path, name: str, args: dict, request: str = "") -> dict:
     if name == "list_files":
         path = scoped_path(project, args.get("path", "."))
         if not path.is_dir():
@@ -204,9 +249,9 @@ def do_tool(app: "App", project: Path, name: str, args: dict) -> dict:
         result = subprocess.run(argv, cwd=cwd, text=True, capture_output=True, timeout=60, check=False)
         return {"exit_code": result.returncode, "stdout": result.stdout[-8000:], "stderr": result.stderr[-4000:]}
     if name == "local_job":
-        brief = args.get("brief", "")
-        if args.get("model") not in {"local-worker", "local-drafter", "chief-of-staff"} or any(f"{h}\n" not in brief for h in ("Task", "Context", "Constraints", "Deliverable", "Definition of done")):
-            raise ValueError("Model or five-heading brief is invalid")
+        if args.get("model") not in {"local-worker", "local-drafter", "chief-of-staff"}:
+            raise ValueError("Choose local-worker, local-drafter, or chief-of-staff")
+        brief = normalize_brief(args.get("brief", ""), request)
         ident = "app-" + secrets.token_hex(5)
         brief_name = ident + ".txt"
         (project / "briefs" / brief_name).write_text(brief, encoding="utf-8")
@@ -229,6 +274,7 @@ def do_tool(app: "App", project: Path, name: str, args: dict) -> dict:
         append_event(project, "tool", f"Local {args['model']} job {ident}: {result['status']}", {"tool": name, "result": result})
         if result["status"] == "completed":
             result["draft"] = (project / "outputs" / f"{ident}.md").read_text(encoding="utf-8")[:12000]
+            result["qa_warnings"] = draft_warnings(request, result["draft"])
         return result
     if name == "project_note":
         note = str(args.get("note", "")).strip()
@@ -260,16 +306,38 @@ class App:
     def set_preferences(self, auto_handoff: bool) -> None:
         PREFERENCES.write_text(json.dumps({"auto_handoff": auto_handoff}, indent=2) + "\n", encoding="utf-8")
 
+    def polish_answer(self, request: str, answer: str) -> str:
+        for _ in range(2):
+            warnings = draft_warnings(request, answer)
+            if not warnings:
+                return answer
+            revision = request_json(workshop.API + "/api/chat", {
+                "model": "chief-of-staff", "stream": False, "options": {"num_ctx": 8192},
+                "messages": [
+                    {"role": "system", "content": "Revise the answer for the user's child. Preserve the requested story, but remove commands, obligation language, and any claim that it is guaranteed free of PDA triggers. Give the child character choices and room to notice rest without pressure. Return the finished story only, with no process notes."},
+                    {"role": "user", "content": "Request: " + request[:4000] + "\n\nDraft to revise:\n" + answer[:8000] + "\n\nQA concern: " + "; ".join(warnings)},
+                ],
+            }, timeout=300)
+            revised = str(revision.get("message", {}).get("content") or "").strip()
+            if revised:
+                answer = revised
+        return answer
+
     def respond(self, project: Path, prompt: str) -> dict:
         if not self.lock.acquire(blocking=False):
             raise ValueError("Manager is busy with another request")
         try:
             append_event(project, "user", prompt)
             prior = [e for e in history(project) if e["role"] in {"user", "assistant"}][-8:]
+            qa_request = "\n".join(e["text"] for e in prior if e["role"] == "user")
             system = ("You are the AI Workshop Manager in a local app. Use Ollama and local tools first. "
                       "Inspect relevant project files and perform authorized reversible work. Ask only for a material missing decision. "
                       "Use local_job for bounded drafts when useful. Treat its output as unverified until checked against the task and source. "
                       "Use outside_help only when configured and local work cannot meet the task. Send the minimum context. "
+                      "If a tool fails, correct its arguments or complete the task directly; never answer by explaining a tool-call error. "
+                      "For a writing request, provide the requested writing in the final answer after checking any local draft. "
+                      "If a local_job returns qa_warnings, revise the draft and do not repeat the flagged language. "
+                      "Never claim a story is guaranteed free of a child's triggers. "
                       "Never claim a tool ran unless its result confirms it. Keep answers concise. "
                       "Workspace: " + str(workspace_for(project)) + ". Project record: " + str(project) + ".\n\n"
                       + (ROOT / "AGENTS.md").read_text(encoding="utf-8")[:3500] + "\n"
@@ -283,6 +351,7 @@ class App:
                 calls = message.get("tool_calls") or []
                 if not calls:
                     answer = str(message.get("content") or "").strip() or "The local Manager returned no answer."
+                    answer = self.polish_answer(qa_request, answer)
                     append_event(project, "assistant", answer, {"actions": actions})
                     return {"answer": answer, "actions": actions}
                 messages.append(message)
@@ -293,13 +362,16 @@ class App:
                     try:
                         if isinstance(arguments, str):
                             arguments = json.loads(arguments)
-                        result = do_tool(self, project, name, arguments)
+                        result = do_tool(self, project, name, arguments, qa_request)
                         detail = {"tool": name, "status": "ok", "summary": str(result)[:280]}
                     except (ValueError, OSError, KeyError, TypeError, HTTPError, URLError, TimeoutError, subprocess.TimeoutExpired) as exc:
                         result = {"error": str(exc)}
                         detail = {"tool": name, "status": "error", "summary": str(exc)[:280]}
                     actions.append(detail)
-                    append_event(project, "tool", f"{name}: {detail['status']}", detail)
+                    label = f"{name}: {detail['status']}"
+                    if detail["status"] == "error":
+                        label += " — " + detail["summary"]
+                    append_event(project, "tool", label, detail)
                     messages.append({"role": "tool", "tool_name": name, "content": json.dumps(result, ensure_ascii=False)[:16000]})
             answer = "I reached the local action limit for this turn. Review the actions and continue the project."
             append_event(project, "assistant", answer, {"actions": actions})
