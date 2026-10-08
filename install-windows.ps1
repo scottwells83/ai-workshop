@@ -19,6 +19,19 @@ if (-not (Test-Path $codexInstructions)) {
     Write-Host 'Added the short Codex entry instructions.'
 }
 
+$opencodeInstructions = Join-Path $env:USERPROFILE '.config\opencode\AGENTS.md'
+if (-not (Test-Path $opencodeInstructions)) {
+    New-Item -ItemType Directory -Path (Split-Path -Parent $opencodeInstructions) -Force | Out-Null
+    Copy-Item (Join-Path $dest 'universal-custom-instructions.md') $opencodeInstructions
+    Write-Host 'Added OpenCode user instructions.'
+}
+$copilotInstructions = Join-Path $env:USERPROFILE '.copilot\copilot-instructions.md'
+if (-not (Test-Path $copilotInstructions)) {
+    New-Item -ItemType Directory -Path (Split-Path -Parent $copilotInstructions) -Force | Out-Null
+    Copy-Item (Join-Path $dest 'universal-custom-instructions.md') $copilotInstructions
+    Write-Host 'Added GitHub Copilot CLI user instructions.'
+}
+
 if (-not (Get-Command ollama -ErrorAction SilentlyContinue)) {
     Write-Host 'Installing Ollama from its official installer...'
     $script = Join-Path $env:TEMP 'ai-workshop-ollama-install.ps1'

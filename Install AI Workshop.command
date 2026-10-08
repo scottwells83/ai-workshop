@@ -20,6 +20,16 @@ if [[ ! -e "$HOME/.codex/AGENTS.md" ]]; then
   echo 'Added the short Codex entry instructions.'
 fi
 
+mkdir -p "$HOME/.config/opencode" "$HOME/.copilot"
+if [[ ! -e "$HOME/.config/opencode/AGENTS.md" ]]; then
+  cp "$DEST/universal-custom-instructions.md" "$HOME/.config/opencode/AGENTS.md"
+  echo 'Added OpenCode user instructions.'
+fi
+if [[ ! -e "$HOME/.copilot/copilot-instructions.md" ]]; then
+  cp "$DEST/universal-custom-instructions.md" "$HOME/.copilot/copilot-instructions.md"
+  echo 'Added GitHub Copilot CLI user instructions.'
+fi
+
 if ! command -v ollama >/dev/null 2>&1; then
   echo 'Installing Ollama from its official installer...'
   TMP="$(mktemp)"

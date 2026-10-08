@@ -9,6 +9,9 @@ on:
       - 'install-windows.ps1'
       - 'workshop.cmd'
       - 'workshop.py'
+      - 'workshop_app.py'
+      - 'Open AI Workshop.cmd'
+      - 'ui/**'
       - 'Modelfile*'
       - 'agents/**'
       - 'guides/**'
@@ -17,7 +20,9 @@ on:
       - 'manager-instructions.md'
       - 'chatgpt-custom-instructions.md'
       - 'universal-custom-instructions.md'
+      - '.github/copilot-instructions.md'
       - 'RELEASE_NOTES.md'
+      - 'RELEASE_READINESS.md'
       - 'README.md'
 
 jobs:

@@ -10,11 +10,12 @@ DEST = Path(sys.argv[1]).resolve() if len(sys.argv) == 2 else ROOT / "dist" / "w
 FILES = (
     "AGENTS.md", "manager-instructions.md", "chatgpt-custom-instructions.md",
     "universal-custom-instructions.md",
-    "README.md", "RELEASE_NOTES.md", "Modelfile", "Modelfile.drafter", "workshop.py", "workshop.cmd",
+    "README.md", "RELEASE_NOTES.md", "RELEASE_READINESS.md", "Modelfile", "Modelfile.drafter", "workshop.py", "workshop_app.py", "workshop.cmd", "Open AI Workshop.cmd",
     "Install AI Workshop.cmd", "install-windows.ps1",
+    ".github/copilot-instructions.md",
     "templates/project.md",
 )
-DIRECTORIES = ("agents", "guides")
+DIRECTORIES = ("agents", "guides", "ui")
 
 if DEST == ROOT or ROOT in DEST.parents and DEST.name != "windows-stage":
     raise SystemExit("Refusing to replace a source directory")

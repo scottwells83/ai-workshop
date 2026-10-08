@@ -1,13 +1,14 @@
-# AI Workshop release notes — October 8, 2026
+# AI Workshop prerelease notes — October 8, 2026
 
 ## Status
 
-This is a release candidate in [pull request #1](https://github.com/scottwells83/ai-workshop/pull/1). The Windows EXE, macOS DMG, and Linux `.run` build successfully in GitHub Actions. First-run installation of dependencies on clean destination computers has not yet been verified.
+This is a prerelease build in [pull request #1](https://github.com/scottwells83/ai-workshop/pull/1). The Windows EXE, macOS DMG, and Linux `.run` build successfully in GitHub Actions. First-run installation of dependencies on clean destination computers has not yet been verified. The [product readiness review](RELEASE_READINESS.md) identifies the work needed before calling AI Workshop a complete standalone package.
 
 ## What changed
 
-- `universal-custom-instructions.md` is the single copy-ready instruction set for Codex, Claude, Gemini, and Meta Muse on Windows, macOS, and Linux. The earlier `chatgpt-custom-instructions.md` now points to it.
-- The Windows and macOS installers include the new file. On a fresh setup, they copy it to Codex's global `AGENTS.md` if that file does not already exist. Existing global instructions are preserved.
+- `universal-custom-instructions.md` is the single copy-ready instruction set for ChatGPT, Codex, Claude, Gemini, Meta Muse, OpenCode, Cursor, and GitHub Copilot on Windows, macOS, and Linux. The earlier `chatgpt-custom-instructions.md` now points to it.
+- The Windows, macOS, and Linux installers include the shared file. On a fresh setup, they copy it to Codex, OpenCode, and GitHub Copilot CLI user-level instruction files only when absent. Existing personal instructions are preserved. Cursor uses the Workshop's root `AGENTS.md`; its optional global User Rules are set inside Cursor.
+- A short `.github/copilot-instructions.md` gives GitHub Copilot on the repository an entry point to the Workshop's shared Manager instructions.
 - The shared text tells assistants to find AI Workshop, use its manager and relevant guides, inspect project state, consider local agents, run available tools themselves, verify outputs, and report unavailable access honestly.
 - The installers stage reusable Workshop files without personal projects, memory, usage logs, or model blobs.
 - The Linux `.run` installer now packages the same clean Workshop instructions and runner. It installs core dependencies on first run and provides a `--verify-only` package check.
@@ -47,8 +48,21 @@ Copy the **entire contents** of `universal-custom-instructions.md`. Use the same
 | Gemini CLI | Put the text in `~/.gemini/GEMINI.md`. [Gemini CLI docs](https://geminicli.com/docs/cli/gemini-md/) |
 | Meta Muse Code | Work from the Workshop folder and trust that workspace; Muse Code reads its `AGENTS.md`. Its [official documentation](https://dev.meta.ai/docs/muse-code/configuration) describes this project-instruction mechanism. |
 | Other Meta Muse apps | If that version offers a saved personal-instructions field, paste the same text there. Otherwise send it at the start of a conversation and do not assume it persists or has local file access. Meta's [Muse announcement](https://about.fb.com/news/2026/09/introducing-muse-personal-ai-agent/) does not establish a universal persistent-instructions setting across every Muse surface. |
+| OpenCode | Put the shared text in `~/.config/opencode/AGENTS.md` on macOS/Linux or `%USERPROFILE%\.config\opencode\AGENTS.md` on Windows. A fresh Workshop setup creates it only when absent. OpenCode also reads the Workshop's root `AGENTS.md`; configure Ollama as its provider if you want OpenCode itself to use local models. [OpenCode rules](https://docs.opencode.ai/docs/rules/) · [Ollama provider](https://opencode.ai/docs/providers) |
+| Cursor IDE or CLI | Open the Workshop directory so Cursor reads its root `AGENTS.md`. For the same behavior in every project, paste the shared text into **Cursor Settings → Rules → User Rules**. Cursor does not gain access to a separate project merely because the rule names it; verify access in the active workspace. [Cursor rules](https://docs.cursor.com/context/rules-for-ai) |
+| GitHub Copilot in VS Code | Open the Workshop folder; VS Code Copilot Chat supports its root `AGENTS.md`, and the package includes `.github/copilot-instructions.md`. [GitHub support matrix](https://docs.github.com/en/copilot/reference/custom-instructions-support) |
+| GitHub Copilot CLI | Put the shared text in `~/.copilot/copilot-instructions.md` on macOS/Linux or `%USERPROFILE%\.copilot\copilot-instructions.md` on Windows. A fresh Workshop setup creates this file only when absent. [Copilot CLI instructions](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-custom-instructions) |
+| GitHub.com Copilot Chat | Paste the shared text into **Copilot Chat → profile picture → Personal instructions** if you want it account-wide. GitHub.com Chat cannot read a Workshop folder on your computer without a connected local execution surface. [GitHub personal instructions](https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/add-custom-instructions/add-personal-instructions) |
 
 After adding the instructions, start a new chat and ask the assistant to identify the Workshop's `AGENTS.md` and report whether it actually has local file access. On a new machine, have a local-capable assistant run the Workshop doctor check and report its result. Do not treat an instruction field alone as a completed installation.
+
+OpenCode, Cursor, and GitHub Copilot are optional applications, not runtime dependencies of AI Workshop. The installers add instruction files where supported but do not install these applications or sign into their accounts. Each app's own permissions and model/provider settings still apply.
+
+## Local AI Workshop app preview
+
+The package now includes a local browser interface. Double-click `Open AI Workshop.command` on macOS, `Open AI Workshop.cmd` on Windows, or run `Open AI Workshop.sh` on Linux. Its Manager uses Ollama for project chat and can inspect scoped files, run bounded checks, create temporary local-agent jobs, and record project notes. OpenAI, Claude, and Gemini API escalation is optional and off by default; API keys are held only in the running process.
+
+In **Settings**, uncheck **Open AI Workshop automatically for new work** to disable assistant-initiated handoff. Manual launch still works. The universal instructions describe the handoff command for assistants with local execution; a cloud-only chat cannot start a program on your computer. This is an app preview. Recovery, provider validation, first-run installation, and full end-to-end QA still need work before complete release. See [RELEASE_READINESS.md](RELEASE_READINESS.md).
 
 ## Verification and limits
 

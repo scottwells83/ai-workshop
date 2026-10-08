@@ -394,6 +394,10 @@ def main() -> int:
     run = sub.add_parser("run", help="run a project's jobs.json")
     run.add_argument("project")
     run.add_argument("--force", action="store_true", help="archive and replace existing outputs")
+    app = sub.add_parser("app", help="open the local AI Workshop interface")
+    app.add_argument("--prompt", default="", help="start a project with this objective")
+    app.add_argument("--workspace", default="", help="folder the new project may work in")
+    app.add_argument("--handoff", action="store_true", help="respect the saved automatic handoff preference")
     sub.add_parser("doctor", help="check required local workshop models")
     usage = sub.add_parser("usage", help="record or summarize workshop resource usage")
     usage_sub = usage.add_subparsers(dest="usage_command", required=True)
@@ -426,6 +430,10 @@ def main() -> int:
             return 0
         if args.command == "run":
             return run_jobs(resolve_project(args.project), args.force)
+        if args.command == "app":
+            from workshop_app import launch
+            launch(args.prompt, args.workspace, args.handoff)
+            return 0
         if args.command == "usage":
             if args.usage_command == "add":
                 return log_chatgpt_usage(args)

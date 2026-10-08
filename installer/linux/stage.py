@@ -18,15 +18,16 @@ PAYLOAD.mkdir(parents=True)
 
 FILES = (
     "AGENTS.md", "manager-instructions.md", "chatgpt-custom-instructions.md",
-    "universal-custom-instructions.md", "README.md", "RELEASE_NOTES.md",
-    "Modelfile", "Modelfile.drafter", "workshop.py", "workshop.sh",
+    "universal-custom-instructions.md", "README.md", "RELEASE_NOTES.md", "RELEASE_READINESS.md",
+    "Modelfile", "Modelfile.drafter", "workshop.py", "workshop_app.py", "workshop.sh", "Open AI Workshop.sh",
     "Install AI Workshop.sh", "create-agents.sh", "templates/project.md",
+    ".github/copilot-instructions.md",
 )
 for name in FILES:
     target = PAYLOAD / name
     target.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(ROOT / name, target)
-for name in ("agents", "guides"):
+for name in ("agents", "guides", "ui"):
     shutil.copytree(ROOT / name, PAYLOAD / name)
 for name in ("projects", "memory"):
     (PAYLOAD / name).mkdir()
