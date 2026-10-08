@@ -1,4 +1,11 @@
 $ErrorActionPreference = 'Stop'
+$stage = 'initializing'
+$logDir = Join-Path $env:LOCALAPPDATA 'AI Workshop'
+New-Item -ItemType Directory -Path $logDir -Force | Out-Null
+$logPath = Join-Path $logDir 'setup.log'
+try { Start-Transcript -Path $logPath -Append -ErrorAction Stop | Out-Null }
+catch { Write-Warning "Could not start setup transcript: $_" }
+try {
 $source = Split-Path -Parent $MyInvocation.MyCommand.Path
 $dest = Join-Path $env:USERPROFILE 'ai-workshop'
 Write-Host 'AI Workshop — a local-first workspace for AI-assisted projects (Windows setup)'
@@ -32,7 +39,13 @@ if (-not (Test-Path $copilotInstructions)) {
     Write-Host 'Added GitHub Copilot CLI user instructions.'
 }
 
-if (-not (Get-Command ollama -ErrorAction SilentlyContinue)) {
+$stage = 'installing Ollama'
+$ollama = Get-Command ollama -ErrorAction SilentlyContinue
+if (-not $ollama) {
+    $candidate = Join-Path $env:LOCALAPPDATA 'Programs\Ollama\ollama.exe'
+    if (Test-Path $candidate) { $ollama = @{ Source = $candidate } }
+}
+if (-not $ollama) {
     Write-Host 'Installing Ollama from its official installer...'
     $script = Join-Path $env:TEMP 'ai-workshop-ollama-install.ps1'
     Invoke-WebRequest -Uri 'https://ollama.com/install.ps1' -OutFile $script
@@ -63,6 +76,7 @@ for ($i = 0; $i -lt 30; $i++) {
 try { Invoke-RestMethod -Uri 'http://127.0.0.1:11434/api/tags' -TimeoutSec 2 | Out-Null }
 catch { throw 'Ollama did not start. Start the Ollama app and rerun this installer.' }
 
+$stage = 'creating required Ollama models'
 $models = @(
     @('local-worker', 'Modelfile'),
     @('local-drafter', 'Modelfile.drafter'),
@@ -73,6 +87,7 @@ $models = @(
     @('usage-analyst', 'agents\Modelfile.usage-analyst')
 )
 foreach ($item in $models) {
+    $stage = "creating Ollama model $($item[0])"
     & $ollama.Source create $item[0] -f (Join-Path $dest $item[1])
     if ($LASTEXITCODE -ne 0) { throw "Model creation failed: $($item[0])" }
 }
@@ -84,6 +99,7 @@ if ($installedNames -contains 'qwen3:32b') {
     Write-Host 'Skipping optional local-reviewer because qwen3:32b is not installed.'
 }
 
+$stage = 'installing Python runtime'
 $validPython = $false
 if (Get-Command py -ErrorAction SilentlyContinue) {
     & py -3 -c 'import sys; assert sys.version_info >= (3, 11)' *> $null
@@ -109,9 +125,11 @@ if (-not $validPython) {
     & $uvExe python install 3.11
     if ($LASTEXITCODE -ne 0) { throw 'Python 3.11 installation failed.' }
 }
+$stage = 'running Workshop doctor'
 & (Join-Path $dest 'workshop.cmd') doctor
 if ($LASTEXITCODE -ne 0) { throw 'Workshop doctor check failed.' }
 
+$stage = 'setting up optional desktop window'
 $webView2Id = '{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}'
 $webView2Keys = @(
     "HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\$webView2Id",
@@ -123,16 +141,21 @@ foreach ($key in $webView2Keys) {
     $version = (Get-ItemProperty -Path $key -Name pv -ErrorAction SilentlyContinue).pv
     if ($version -and $version -ne '0.0.0.0') { $webView2Found = $true; break }
 }
-if (-not $webView2Found) {
-    Write-Host 'Installing Microsoft WebView2 Runtime for the desktop window...'
-    $webView2Setup = Join-Path $env:TEMP 'MicrosoftEdgeWebView2Setup.exe'
-    Invoke-WebRequest -Uri 'https://go.microsoft.com/fwlink/p/?linkid=2124703' -OutFile $webView2Setup
-    $process = Start-Process -FilePath $webView2Setup -ArgumentList '/silent', '/install' -Wait -PassThru
-    if ($process.ExitCode -ne 0) { throw "WebView2 Runtime setup failed with exit code $($process.ExitCode)." }
+try {
+    if (-not $webView2Found) {
+        Write-Host 'Installing Microsoft WebView2 Runtime for the desktop window...'
+        $webView2Setup = Join-Path $env:TEMP 'MicrosoftEdgeWebView2Setup.exe'
+        Invoke-WebRequest -Uri 'https://go.microsoft.com/fwlink/p/?linkid=2124703' -OutFile $webView2Setup
+        $process = Start-Process -FilePath $webView2Setup -ArgumentList '/silent', '/install' -Wait -PassThru
+        if ($process.ExitCode -ne 0) { throw "WebView2 Runtime setup failed with exit code $($process.ExitCode)." }
+    }
+    & (Join-Path $dest 'workshop.cmd') desktop-setup
+    if ($LASTEXITCODE -ne 0) { throw 'Desktop window dependency setup failed.' }
+} catch {
+    Write-Warning "Desktop window setup could not complete: $_. The launcher can use the browser fallback."
 }
-& (Join-Path $dest 'workshop.cmd') desktop-setup
-if ($LASTEXITCODE -ne 0) { throw 'Desktop window dependency setup failed.' }
 
+$stage = 'setting up optional Open WebUI'
 $env:PATH = "$env:ProgramFiles\Docker\Docker\resources\bin;$env:PATH"
 $docker = Get-Command docker -ErrorAction SilentlyContinue
 if (-not $docker) {
@@ -177,3 +200,11 @@ if ($docker) {
     } else { Write-Warning 'Start Docker Desktop, accept its terms, and rerun setup for Open WebUI.' }
 } else { Write-Warning 'Open WebUI is optional for the runner. Install Docker Desktop from docker.com and rerun setup to add it.' }
 Write-Host "Workshop ready at $dest"
+} catch {
+    $message = "AI Workshop setup failed during $stage`: $($_.Exception.Message)"
+    Write-Error $message -ErrorAction Continue
+    Write-Host "Setup log: $logPath"
+    exit 1
+} finally {
+    try { Stop-Transcript -ErrorAction SilentlyContinue | Out-Null } catch {}
+}
