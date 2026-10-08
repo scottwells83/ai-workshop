@@ -18,7 +18,7 @@ PAYLOAD.mkdir(parents=True)
 
 FILES = (
     "AGENTS.md", "manager-instructions.md", "chatgpt-custom-instructions.md",
-    "universal-custom-instructions.md", "gemini-ai-workshop-instructions.md", "README.md", "RELEASE_NOTES.md", "SETUP_GUIDE.md", "CHANGELOG.md", "RELEASE_READINESS.md",
+    "universal-custom-instructions.md", "universal-custom-instructions-short.md", "gemini-ai-workshop-instructions.md", "README.md", "RELEASE_NOTES.md", "SETUP_GUIDE.md", "USER_MANUAL.md", "CHANGELOG.md", "RELEASE_READINESS.md",
     "Modelfile", "Modelfile.drafter", "workshop.py", "workshop_app.py", "desktop_setup.py", "workshop.sh", "Open AI Workshop.sh",
     "Install AI Workshop.sh", "create-agents.sh", "templates/project.md",
     ".github/copilot-instructions.md",

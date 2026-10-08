@@ -2,6 +2,12 @@
 
 This file records user-facing AI Workshop changes. Keep entries factual and update it when code, installers, or release documents change. The [current release](https://github.com/scottwells83/ai-workshop/tree/main/current%20release/) folder contains the installers and documents intended for download.
 
+## October 8 2026 setup and manual update
+
+- Added separate browser and installed-app instruction placement in the setup guide, with links to each vendor's documentation.
+- Added a user manual for daily local workspace use, handoff, outside AI, moving machines, and recovery.
+- Added a 1,500-character-compatible short universal instruction variant and included the manual and short variant in all three installer payloads.
+
 ## October 8 2026 documentation and delivery update
 
 - Split release notes from platform setup and AI-assistant instructions.

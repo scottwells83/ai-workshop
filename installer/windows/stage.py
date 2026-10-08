@@ -9,8 +9,8 @@ ROOT = Path(__file__).resolve().parents[2]
 DEST = Path(sys.argv[1]).resolve() if len(sys.argv) == 2 else ROOT / "dist" / "windows-stage"
 FILES = (
     "AGENTS.md", "manager-instructions.md", "chatgpt-custom-instructions.md",
-    "universal-custom-instructions.md", "gemini-ai-workshop-instructions.md",
-    "README.md", "RELEASE_NOTES.md", "SETUP_GUIDE.md", "CHANGELOG.md", "RELEASE_READINESS.md", "Modelfile", "Modelfile.drafter", "workshop.py", "workshop_app.py", "desktop_setup.py", "workshop.cmd", "Open AI Workshop.cmd",
+    "universal-custom-instructions.md", "universal-custom-instructions-short.md", "gemini-ai-workshop-instructions.md",
+    "README.md", "RELEASE_NOTES.md", "SETUP_GUIDE.md", "USER_MANUAL.md", "CHANGELOG.md", "RELEASE_READINESS.md", "Modelfile", "Modelfile.drafter", "workshop.py", "workshop_app.py", "desktop_setup.py", "workshop.cmd", "Open AI Workshop.cmd",
     "Install AI Workshop.cmd", "install-windows.ps1",
     ".github/copilot-instructions.md",
     "templates/project.md",

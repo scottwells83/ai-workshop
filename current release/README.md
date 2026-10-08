@@ -5,7 +5,9 @@ AI Workshop prerelease package dated October 8, 2026. The installers were built 
 | Item | File |
 | --- | --- |
 | Release notes | [Markdown](RELEASE_NOTES.md) · [Word](RELEASE_NOTES.docx) |
-| Setup and user instructions | [Markdown](SETUP_GUIDE.md) · [Word](SETUP_GUIDE.docx) |
+| Setup guide | [Markdown](SETUP_GUIDE.md) · [Word](SETUP_GUIDE.docx) |
+| User manual | [Markdown](USER_MANUAL.md) · [Word](USER_MANUAL.docx) |
+| Short universal instructions | [Markdown](universal-custom-instructions-short.md) |
 | Beta readiness review | [BETA_READINESS.md](BETA_READINESS.md) |
 | Windows installer | [AI-Workshop-Windows-Setup.exe](AI-Workshop-Windows-Setup.exe) |
 | macOS installer | [AI-Workshop-macOS.dmg](AI-Workshop-macOS.dmg) |
