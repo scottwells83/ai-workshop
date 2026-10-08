@@ -79,6 +79,8 @@ if ! command -v python3 >/dev/null 2>&1 ||
   "$HOME/.local/bin/uv" python install 3.11
 fi
 "$DEST/workshop.command" doctor
+"$DEST/workshop.command" desktop-setup
+echo "Desktop app: $DEST/AI Workshop.app"
 
 export PATH="$HOME/.docker/bin:/Applications/Docker.app/Contents/Resources/bin:$PATH"
 if ! command -v docker >/dev/null 2>&1 && [[ ! -d /Applications/Docker.app ]]; then

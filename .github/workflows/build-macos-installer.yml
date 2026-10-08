@@ -11,6 +11,8 @@ on:
       - 'workshop.command'
       - 'workshop.py'
       - 'workshop_app.py'
+      - 'desktop_setup.py'
+      - 'desktop/**'
       - 'Open AI Workshop.command'
       - 'ui/**'
       - 'Modelfile*'

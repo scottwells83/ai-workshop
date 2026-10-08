@@ -84,5 +84,17 @@ if ! command -v python3 >/dev/null 2>&1 ||
 fi
 
 bash "$DEST/workshop.sh" doctor
+bash "$DEST/workshop.sh" desktop-setup
+mkdir -p "$HOME/.local/share/applications"
+cat > "$HOME/.local/share/applications/ai-workshop.desktop" <<EOF
+[Desktop Entry]
+Type=Application
+Name=AI Workshop
+Comment=Local AI Workshop Manager
+Exec="$DEST/Open AI Workshop.sh"
+Icon=$DEST/desktop/ai-workshop.svg
+Terminal=false
+Categories=Office;Utility;
+EOF
 echo "Workshop ready at $DEST"
 echo 'Docker and Open WebUI are optional and are not installed by this Linux setup.'

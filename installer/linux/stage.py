@@ -19,7 +19,7 @@ PAYLOAD.mkdir(parents=True)
 FILES = (
     "AGENTS.md", "manager-instructions.md", "chatgpt-custom-instructions.md",
     "universal-custom-instructions.md", "README.md", "RELEASE_NOTES.md", "RELEASE_READINESS.md",
-    "Modelfile", "Modelfile.drafter", "workshop.py", "workshop_app.py", "workshop.sh", "Open AI Workshop.sh",
+    "Modelfile", "Modelfile.drafter", "workshop.py", "workshop_app.py", "desktop_setup.py", "workshop.sh", "Open AI Workshop.sh",
     "Install AI Workshop.sh", "create-agents.sh", "templates/project.md",
     ".github/copilot-instructions.md",
 )
@@ -29,6 +29,8 @@ for name in FILES:
     shutil.copy2(ROOT / name, target)
 for name in ("agents", "guides", "ui"):
     shutil.copytree(ROOT / name, PAYLOAD / name)
+(PAYLOAD / "desktop").mkdir()
+shutil.copy2(ROOT / "desktop" / "linux" / "ai-workshop.svg", PAYLOAD / "desktop" / "ai-workshop.svg")
 for name in ("projects", "memory"):
     (PAYLOAD / name).mkdir()
 (PAYLOAD / "projects" / "README.md").write_text("# AI Workshop projects\n", encoding="utf-8")

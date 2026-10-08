@@ -398,6 +398,8 @@ def main() -> int:
     app.add_argument("--prompt", default="", help="start a project with this objective")
     app.add_argument("--workspace", default="", help="folder the new project may work in")
     app.add_argument("--handoff", action="store_true", help="respect the saved automatic handoff preference")
+    app.add_argument("--desktop", action="store_true", help="open a standalone desktop window")
+    sub.add_parser("desktop-setup", help="install the desktop web view in an isolated environment")
     sub.add_parser("doctor", help="check required local workshop models")
     usage = sub.add_parser("usage", help="record or summarize workshop resource usage")
     usage_sub = usage.add_subparsers(dest="usage_command", required=True)
@@ -432,7 +434,11 @@ def main() -> int:
             return run_jobs(resolve_project(args.project), args.force)
         if args.command == "app":
             from workshop_app import launch
-            launch(args.prompt, args.workspace, args.handoff)
+            launch(args.prompt, args.workspace, args.handoff, args.desktop)
+            return 0
+        if args.command == "desktop-setup":
+            from desktop_setup import setup
+            setup()
             return 0
         if args.command == "usage":
             if args.usage_command == "add":

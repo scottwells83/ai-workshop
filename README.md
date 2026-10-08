@@ -16,13 +16,13 @@ The setup creates `~/ai-workshop` or `%USERPROFILE%\ai-workshop`, adds Codex, Op
 
 The model roster includes the general `local-worker` and `local-drafter`, four personal workflow agents, and `usage-analyst` for reviewing local-versus-cloud usage records and proposing evidence-based routing improvements.
 
-This prerelease includes a local browser app with project chat, a tool-capable Ollama Manager, bounded local jobs, and optional outside API escalation. It is a testable preview, not a fully verified standalone product. See [RELEASE_READINESS.md](RELEASE_READINESS.md) for release gaps.
+This prerelease includes a standalone desktop window with project chat, a tool-capable Ollama Manager, bounded local jobs, and optional outside API escalation. It is a testable preview, not a fully verified standalone product. See [RELEASE_READINESS.md](RELEASE_READINESS.md) for release gaps.
 
 Draw Things is optional and currently available for Apple devices; it is not required for text projects or installed by this setup. Model downloads happen separately on each computer. The ZIP does not carry Ollama model blobs, Docker data, or ChatGPT account settings.
 
 ## Using the Manager
 
-Double-click `Open AI Workshop.command` on macOS, `Open AI Workshop.cmd` on Windows, or run `Open AI Workshop.sh` on Linux. The app opens a loopback browser window. Start a project there and work with the local Manager. In Settings, uncheck **Open AI Workshop automatically for new work** to keep new tasks in your current assistant; manual launch still works. Outside AI is off until you configure an API provider and key in Settings.
+Double-click `AI Workshop.app` or `Open AI Workshop.command` on macOS, use the AI Workshop Start menu shortcut or `Open AI Workshop.cmd` on Windows, or choose AI Workshop from the Linux applications menu. These open a separate desktop window. If the desktop web view cannot start, the launcher opens the browser interface. Start a project there and work with the local Manager. In Settings, uncheck **Open AI Workshop automatically for new work** to keep new tasks in your current assistant; manual launch still works. Outside AI is off until you configure an API provider and key in Settings.
 
 Open the `ai-workshop` folder in a local-capable AI session and say what you want to do. Use the copy-ready text in `universal-custom-instructions.md` in ChatGPT, Codex, Claude, Gemini, Meta Muse, OpenCode, Cursor, GitHub Copilot, or another assistant's personal-instruction field. A chat without local access cannot execute the runner. In Codex, this folder's `AGENTS.md` is discovered as project guidance. A ChatGPT Project is created only when the active product surface exposes that capability; the Manager must confirm it exists.
 

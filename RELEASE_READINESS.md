@@ -4,7 +4,7 @@ October 8, 2026. Source reviewed: the Manager guides, `workshop.py`, Ollama Mode
 
 ## Decision
 
-AI Workshop now has a testable local browser app preview. It starts an Ollama-backed Manager in a loopback window, creates projects, reads scoped files, runs bounded checks and local jobs, and can call a configured outside API. The user can disable automatic handoff while retaining manual launch. A local macOS session verified the interface, file tool, authentication guard, and preference behavior. This is not yet a complete release: cross-platform first run, recovery, outside-provider calls, installer upgrades, and result QA remain unverified.
+AI Workshop now has a testable local desktop app preview. It starts an Ollama-backed Manager in a separate desktop window, creates projects, reads scoped files, runs bounded checks and local jobs, and can call a configured outside API. The user can disable automatic handoff while retaining manual launch. A local macOS session verified the interface, file tool, authentication guard, preference behavior, and standalone WebKit window. Windows and Linux desktop windows still need destination-machine testing. This is not yet a complete release: cross-platform first run, recovery, outside-provider calls, installer upgrades, and result QA remain unverified.
 
 ## Current capability and gap
 

@@ -22,6 +22,9 @@ WizardStyle=modern
 [Files]
 Source: "{#SourcePath}\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs onlyifdoesntexist
 
+[Icons]
+Name: "{userprograms}\AI Workshop"; Filename: "{app}\.desktop-venv\Scripts\pythonw.exe"; Parameters: """{app}\workshop.py"" app --desktop"; WorkingDir: "{app}"
+
 [Code]
 procedure CurStepChanged(CurStep: TSetupStep);
 var

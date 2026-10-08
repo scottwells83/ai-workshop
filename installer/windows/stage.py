@@ -10,7 +10,7 @@ DEST = Path(sys.argv[1]).resolve() if len(sys.argv) == 2 else ROOT / "dist" / "w
 FILES = (
     "AGENTS.md", "manager-instructions.md", "chatgpt-custom-instructions.md",
     "universal-custom-instructions.md",
-    "README.md", "RELEASE_NOTES.md", "RELEASE_READINESS.md", "Modelfile", "Modelfile.drafter", "workshop.py", "workshop_app.py", "workshop.cmd", "Open AI Workshop.cmd",
+    "README.md", "RELEASE_NOTES.md", "RELEASE_READINESS.md", "Modelfile", "Modelfile.drafter", "workshop.py", "workshop_app.py", "desktop_setup.py", "workshop.cmd", "Open AI Workshop.cmd",
     "Install AI Workshop.cmd", "install-windows.ps1",
     ".github/copilot-instructions.md",
     "templates/project.md",

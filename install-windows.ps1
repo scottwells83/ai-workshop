@@ -105,6 +105,27 @@ if (-not $validPython) {
 & (Join-Path $dest 'workshop.cmd') doctor
 if ($LASTEXITCODE -ne 0) { throw 'Workshop doctor check failed.' }
 
+$webView2Id = '{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}'
+$webView2Keys = @(
+    "HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\$webView2Id",
+    "HKLM:\SOFTWARE\Microsoft\EdgeUpdate\Clients\$webView2Id",
+    "HKCU:\Software\Microsoft\EdgeUpdate\Clients\$webView2Id"
+)
+$webView2Found = $false
+foreach ($key in $webView2Keys) {
+    $version = (Get-ItemProperty -Path $key -Name pv -ErrorAction SilentlyContinue).pv
+    if ($version -and $version -ne '0.0.0.0') { $webView2Found = $true; break }
+}
+if (-not $webView2Found) {
+    Write-Host 'Installing Microsoft WebView2 Runtime for the desktop window...'
+    $webView2Setup = Join-Path $env:TEMP 'MicrosoftEdgeWebView2Setup.exe'
+    Invoke-WebRequest -Uri 'https://go.microsoft.com/fwlink/p/?linkid=2124703' -OutFile $webView2Setup
+    $process = Start-Process -FilePath $webView2Setup -ArgumentList '/silent', '/install' -Wait -PassThru
+    if ($process.ExitCode -ne 0) { throw "WebView2 Runtime setup failed with exit code $($process.ExitCode)." }
+}
+& (Join-Path $dest 'workshop.cmd') desktop-setup
+if ($LASTEXITCODE -ne 0) { throw 'Desktop window dependency setup failed.' }
+
 $env:PATH = "$env:ProgramFiles\Docker\Docker\resources\bin;$env:PATH"
 $docker = Get-Command docker -ErrorAction SilentlyContinue
 if (-not $docker) {

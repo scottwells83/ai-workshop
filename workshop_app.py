@@ -388,7 +388,22 @@ class App:
         threading.Thread(target=work, daemon=True).start()
 
 
-def serve(app: App, port: int = 0, initial: str = "", workspace: str = "") -> None:
+def desktop_window(address: str) -> None:
+    import webview
+    if sys.platform == "darwin":
+        try:
+            from Foundation import NSProcessInfo
+            NSProcessInfo.processInfo().setProcessName_("AI Workshop")
+        except (ImportError, AttributeError):
+            pass
+
+    webview.create_window("AI Workshop", address, width=1280, height=840,
+                          min_size=(680, 520), background_color="#0b1018",
+                          text_select=True)
+    webview.start()
+
+
+def serve(app: App, port: int = 0, initial: str = "", workspace: str = "", desktop: bool = False) -> None:
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, *args):
             return
@@ -469,15 +484,29 @@ def serve(app: App, port: int = 0, initial: str = "", workspace: str = "") -> No
         app.start_handoff(project, initial)
         address += f"&project={project.name}"
     print(address, flush=True)
-    webbrowser.open(address)
-    try: server.serve_forever()
+    if desktop:
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        try:
+            desktop_window(address)
+        except (ImportError, RuntimeError, OSError) as exc:
+            print(f"Desktop window unavailable ({exc}); opening the browser.", file=sys.stderr)
+            webbrowser.open(address)
+            thread.join()
+    else:
+        webbrowser.open(address)
+        try: server.serve_forever()
+        except KeyboardInterrupt: pass
+    try: server.shutdown()
     finally:
         server.server_close()
-        try: INSTANCE.unlink()
+        try:
+            if json.loads(INSTANCE.read_text(encoding="utf-8")).get("token") == app.token:
+                INSTANCE.unlink()
         except OSError: pass
 
 
-def launch(prompt: str = "", workspace: str = "", handoff: bool = False) -> None:
+def launch(prompt: str = "", workspace: str = "", handoff: bool = False, desktop: bool = False) -> None:
     if handoff and not App().preferences()["auto_handoff"]:
         print("AI Workshop automatic handoff is disabled. Continue in the current assistant.")
         return
@@ -490,11 +519,17 @@ def launch(prompt: str = "", workspace: str = "", handoff: bool = False) -> None
             if prompt:
                 data = request_json(f"http://127.0.0.1:{port}/api/handoff", {"prompt": prompt, "workspace": workspace or None}, {"X-Workshop-Token": token}, timeout=3)
                 address += "&project=" + data["id"]
-            webbrowser.open(address)
+            if desktop:
+                try: desktop_window(address)
+                except (ImportError, RuntimeError, OSError) as exc:
+                    print(f"Desktop window unavailable ({exc}); opening the browser.", file=sys.stderr)
+                    webbrowser.open(address)
+            else:
+                webbrowser.open(address)
             print(address)
             return
         except (OSError, ValueError, KeyError, URLError, HTTPError, json.JSONDecodeError): pass
-    serve(App(), initial=prompt, workspace=workspace)
+    serve(App(), initial=prompt, workspace=workspace, desktop=desktop)
 
 
 if __name__ == "__main__":
@@ -502,5 +537,6 @@ if __name__ == "__main__":
     parser.add_argument("--prompt", default="")
     parser.add_argument("--workspace", default="")
     parser.add_argument("--handoff", action="store_true", help="respect the saved automatic handoff preference")
+    parser.add_argument("--desktop", action="store_true", help="open a standalone desktop window")
     args = parser.parse_args()
-    launch(args.prompt, args.workspace, args.handoff)
+    launch(args.prompt, args.workspace, args.handoff, args.desktop)

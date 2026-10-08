@@ -62,7 +62,7 @@ OpenCode, Cursor, and GitHub Copilot are optional applications, not runtime depe
 
 ## Local AI Workshop app preview
 
-The package now includes a local browser interface. Double-click `Open AI Workshop.command` on macOS, `Open AI Workshop.cmd` on Windows, or run `Open AI Workshop.sh` on Linux. Its Manager uses Ollama for project chat and can inspect scoped files, run bounded checks, create temporary local-agent jobs, and record project notes. OpenAI, Claude, and Gemini API escalation is optional and off by default; API keys are held only in the running process.
+The package now includes a separate AI Workshop desktop window. Double-click `AI Workshop.app` or `Open AI Workshop.command` on macOS, use the AI Workshop Start menu shortcut or `Open AI Workshop.cmd` on Windows, or choose AI Workshop from the Linux applications menu. A browser fallback is available if the desktop web view cannot start. Its Manager uses Ollama for project chat and can inspect scoped files, run bounded checks, create temporary local-agent jobs, and record project notes. OpenAI, Claude, and Gemini API escalation is optional and off by default; API keys are held only in the running process.
 
 In **Settings**, uncheck **Open AI Workshop automatically for new work** to disable assistant-initiated handoff. Manual launch still works. The universal instructions describe the handoff command for assistants with local execution; a cloud-only chat cannot start a program on your computer. This is an app preview. Recovery, provider validation, first-run installation, and full end-to-end QA still need work before complete release. See [RELEASE_READINESS.md](RELEASE_READINESS.md).
 
