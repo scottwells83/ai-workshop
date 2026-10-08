@@ -1,0 +1,44 @@
+name: Build Linux installer
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/build-linux-installer.yml'
+      - 'installer/linux/**'
+      - 'Install AI Workshop.sh'
+      - 'workshop.sh'
+      - 'create-agents.sh'
+      - 'workshop.py'
+      - 'Modelfile*'
+      - 'agents/**'
+      - 'guides/**'
+      - 'templates/**'
+      - 'AGENTS.md'
+      - 'manager-instructions.md'
+      - 'chatgpt-custom-instructions.md'
+      - 'universal-custom-instructions.md'
+      - 'README.md'
+      - 'RELEASE_NOTES.md'
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check script syntax
+        run: bash -n 'Install AI Workshop.sh' workshop.sh create-agents.sh
+      - name: Build installer
+        run: python3 installer/linux/build.py
+      - name: Verify installer payload
+        run: ./dist/linux/AI-Workshop-Linux-Setup.run --verify-only
+      - name: Hash installer
+        run: sha256sum dist/linux/AI-Workshop-Linux-Setup.run
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-workshop-linux-installer
+          path: dist/linux/AI-Workshop-Linux-Setup.run
+          if-no-files-found: error

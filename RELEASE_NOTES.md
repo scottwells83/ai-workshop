@@ -2,7 +2,7 @@
 
 ## Status
 
-This is a release candidate in [pull request #1](https://github.com/scottwells83/ai-workshop/pull/1). The Windows EXE and macOS DMG build successfully in GitHub Actions. First-run installation of dependencies on a clean Windows PC or Mac has not yet been verified. Linux has no dedicated installer yet.
+This is a release candidate in [pull request #1](https://github.com/scottwells83/ai-workshop/pull/1). The Windows EXE and macOS DMG build successfully in GitHub Actions. A portable Linux `.run` installer is available. First-run installation of dependencies on clean destination computers has not yet been verified.
 
 ## What changed
 
@@ -10,6 +10,7 @@ This is a release candidate in [pull request #1](https://github.com/scottwells83
 - The Windows and macOS installers include the new file. On a fresh setup, they copy it to Codex's global `AGENTS.md` if that file does not already exist. Existing global instructions are preserved.
 - The shared text tells assistants to find AI Workshop, use its manager and relevant guides, inspect project state, consider local agents, run available tools themselves, verify outputs, and report unavailable access honestly.
 - The installers stage reusable Workshop files without personal projects, memory, usage logs, or model blobs.
+- The Linux `.run` installer now packages the same clean Workshop instructions and runner. It installs core dependencies on first run and provides a `--verify-only` package check.
 
 ## Install AI Workshop
 
@@ -27,7 +28,9 @@ This is a release candidate in [pull request #1](https://github.com/scottwells83
 
 ### Linux
 
-There is no Linux installer in this release candidate. Put the current Workshop source at `~/ai-workshop`, install [Ollama](https://ollama.com/download) and Python 3.11 or newer, create the models from the bundled Modelfiles with `create-agents.sh`, and run `python3 workshop.py doctor` from the Workshop folder. A local-capable assistant can perform these commands; the user does not need to type them. Do not claim Linux setup succeeded until `doctor` passes. Docker Desktop and Open WebUI are optional for the local runner.
+1. Download the `ai-workshop-linux-installer` artifact from the latest successful [Linux workflow run](https://github.com/scottwells83/ai-workshop/actions/workflows/build-linux-installer.yml). Extract the artifact and ask a local-capable assistant to run `AI-Workshop-Linux-Setup.run`; or execute it in a terminal. Bash, tar, awk, and curl are bootstrap requirements.
+2. Setup places the Workshop at `~/ai-workshop`, installs [Ollama](https://ollama.com/download) if missing, creates the seven models, supplies Python 3.11 through uv when needed, and runs the doctor check. Internet access is required. Ollama's official installer may request system permission.
+3. Docker and Open WebUI are optional and are not installed by the Linux setup. If you only want to check the package, run the file with `--verify-only`; this does not install dependencies.
 
 Existing Workshop folders are preserved by the Windows and macOS setup launchers. Review source updates before replacing customized files. Personal memory and project data must be transferred separately through a private channel.
 
@@ -52,4 +55,4 @@ After adding the instructions, start a new chat and ask the assistant to identif
 - Windows GitHub Actions produced an EXE and uploaded its artifact; the artifact was downloaded and identified as a Windows executable.
 - macOS GitHub Actions produced a DMG; its checksum passed, and the downloaded image mounted with the launcher and model files present.
 - Payload staging checks found no personal projects, memory, or usage log in either installer.
-- First-run Ollama, model, Python, Docker, Gatekeeper, and Windows permission behavior still needs testing on destination machines. The installers require network access to fetch core dependencies and model weights.
+- The Linux `.run` payload builds on a Linux GitHub runner and passes its extraction and syntax check. First-run Ollama, model, Python, Docker, Gatekeeper, and Windows permission behavior still needs testing on destination machines. The installers require network access to fetch core dependencies and model weights.

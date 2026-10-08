@@ -10,8 +10,9 @@ The canonical machine-readable name is `ai-workshop` (folder, repository, packag
 
 - macOS: double-click `Install AI Workshop.command` from the extracted package.
 - Windows: double-click `Install AI Workshop.cmd` from the extracted package.
+- Linux: run `AI-Workshop-Linux-Setup.run` from a local-capable assistant or terminal. It extracts the Workshop and starts `Install AI Workshop.sh`.
 
-The setup creates `~/ai-workshop` or `%USERPROFILE%\ai-workshop`, adds a short Codex global instruction file if none exists, installs Ollama if needed, creates the seven workshop models, and checks the local runner. It attempts to set up Open WebUI through Docker Desktop. Operating-system permission, Docker license, or app sign-in prompts may still need the computer owner. Re-running setup does not overwrite an existing workshop folder. On an existing computer, use the Manager to review package changes before replacing customized files.
+The setup creates `~/ai-workshop` or `%USERPROFILE%\ai-workshop`, adds a short Codex global instruction file if none exists, installs Ollama if needed, creates the seven workshop models, and checks the local runner. The Windows and macOS launchers attempt to set up Open WebUI through Docker Desktop; the Linux installer leaves Docker and Open WebUI optional. Operating-system permission, Docker license, or app sign-in prompts may still need the computer owner. Re-running setup does not overwrite an existing workshop folder. On an existing computer, use the Manager to review package changes before replacing customized files.
 
 The model roster includes the general `local-worker` and `local-drafter`, four personal workflow agents, and `usage-analyst` for reviewing local-versus-cloud usage records and proposing evidence-based routing improvements.
 
