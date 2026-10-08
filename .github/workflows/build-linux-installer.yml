@@ -28,6 +28,8 @@ on:
       - '.github/copilot-instructions.md'
       - 'README.md'
       - 'RELEASE_NOTES.md'
+      - 'SETUP_GUIDE.md'
+      - 'CHANGELOG.md'
       - 'RELEASE_READINESS.md'
   push:
     paths:
@@ -55,6 +57,8 @@ on:
       - '.github/copilot-instructions.md'
       - 'README.md'
       - 'RELEASE_NOTES.md'
+      - 'SETUP_GUIDE.md'
+      - 'CHANGELOG.md'
       - 'RELEASE_READINESS.md'
 
 jobs:

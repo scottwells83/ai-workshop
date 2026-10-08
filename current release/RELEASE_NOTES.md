@@ -2,7 +2,7 @@
 
 October 8, 2026
 
-AI Workshop now has a testable desktop workspace and installers for Windows, macOS, and Linux. The three installers in [current release](https://github.com/scottwells83/ai-workshop/tree/main/current%20release/) passed their GitHub Actions build checks; the exact build commit and run links are recorded in the current release index. This remains a prerelease: first-run setup on clean destination computers, upgrades, recovery, and outside-provider calls need further validation. The [release readiness review](RELEASE_READINESS.md) tracks those gaps.
+AI Workshop now has a testable desktop workspace and installers for Windows, macOS, and Linux. The three installers in this folder passed their GitHub Actions build checks; the exact build commit and run links are recorded in the current release index. This remains a prerelease: first-run setup on clean destination computers, upgrades, recovery, and outside-provider calls need further validation. The [release readiness review](../RELEASE_READINESS.md) tracks those gaps.
 
 ## Changes in this build
 
@@ -15,8 +15,8 @@ AI Workshop now has a testable desktop workspace and installers for Windows, mac
 
 ## Build verification
 
-The [Windows](https://github.com/scottwells83/ai-workshop/actions/runs/37814709879), [macOS](https://github.com/scottwells83/ai-workshop/actions/runs/37814709830), and [Linux](https://github.com/scottwells83/ai-workshop/actions/runs/37814710009) workflows succeeded for the release source. The downloaded macOS DMG passed `hdiutil verify`. The Linux workflow passed its `--verify-only` package check. The three repository copies match the hashes in [SHA256SUMS](https://github.com/scottwells83/ai-workshop/blob/main/current%20release/SHA256SUMS).
+The [Windows](https://github.com/scottwells83/ai-workshop/actions/runs/37814709879), [macOS](https://github.com/scottwells83/ai-workshop/actions/runs/37814709830), and [Linux](https://github.com/scottwells83/ai-workshop/actions/runs/37814710009) workflows succeeded for the release source. The downloaded macOS DMG passed `hdiutil verify`. The Linux workflow passed its `--verify-only` package check. The three repository copies match the hashes in [SHA256SUMS](SHA256SUMS).
 
 These checks establish build and package integrity. Windows and Linux desktop behavior, dependency installation, model creation, permissions, and clean-machine first run remain unverified. The installers are unsigned; the macOS DMG is also unnotarized.
 
-For installation and AI-platform instructions, use the separate [setup guide](https://github.com/scottwells83/ai-workshop/blob/main/current%20release/SETUP_GUIDE.md).
+For installation and AI-platform instructions, use the separate [setup guide](SETUP_GUIDE.md).

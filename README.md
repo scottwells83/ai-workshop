@@ -8,7 +8,7 @@ The canonical machine-readable name is `ai-workshop` (folder, repository, packag
 
 ## First setup
 
-The [October 8 installer files](release-assets/2026-10-08/) are included in this repository for direct download. Their [SHA-256 checksums](release-assets/2026-10-08/SHA256SUMS) and source build commit are recorded alongside them. Setup downloads Ollama, Python, and model weights when needed; those dependencies are not embedded in the repository.
+Get the installers and delivery documents from [current release](https://github.com/scottwells83/ai-workshop/tree/main/current%20release/). Read the [setup guide](https://github.com/scottwells83/ai-workshop/blob/main/current%20release/SETUP_GUIDE.md) for platform-specific installation and AI-assistant instructions. [Release notes](https://github.com/scottwells83/ai-workshop/blob/main/current%20release/RELEASE_NOTES.md) cover changes and verification; [CHANGELOG.md](https://github.com/scottwells83/ai-workshop/blob/main/CHANGELOG.md) tracks repository changes over time. The [SHA-256 checksums](https://github.com/scottwells83/ai-workshop/blob/main/current%20release/SHA256SUMS) and installer build commit are recorded with the release. Setup downloads Ollama, Python, and model weights when needed; those dependencies are not embedded in the repository.
 
 - macOS: double-click `Install AI Workshop.command` from the extracted package.
 - Windows: double-click `Install AI Workshop.cmd` from the extracted package.
@@ -18,7 +18,7 @@ The setup creates `~/ai-workshop` or `%USERPROFILE%\ai-workshop`, adds Codex, Op
 
 The required model roster includes the general `local-worker` and `local-drafter`, four personal workflow agents, and `usage-analyst` for reviewing local-versus-cloud usage records. The optional `local-reviewer` is a heavier, source-grounded reviewer built from `qwen3:32b` only when that base model is already installed. Its output still requires Manager QA.
 
-This prerelease includes a standalone desktop window with project chat, a tool-capable Ollama Manager, bounded local jobs, and optional outside API escalation. It is a testable preview, not a fully verified standalone product. See [RELEASE_READINESS.md](RELEASE_READINESS.md) for release gaps.
+This prerelease includes a standalone desktop window with project chat, a tool-capable Ollama Manager, bounded local jobs, and optional outside API escalation. It is a testable preview, not a fully verified standalone product. See the [beta readiness review](https://github.com/scottwells83/ai-workshop/blob/main/current%20release/BETA_READINESS.md) and [product readiness review](RELEASE_READINESS.md) for release gaps.
 
 Draw Things is optional and currently available for Apple devices; it is not required for text projects or installed by this setup. Model downloads happen separately on each computer. The ZIP does not carry Ollama model blobs, Docker data, or ChatGPT account settings.
 
