@@ -2,7 +2,7 @@
 
 ## Status
 
-This is a prerelease build in [pull request #1](https://github.com/scottwells83/ai-workshop/pull/1). The Windows EXE, macOS DMG, and Linux `.run` build successfully in GitHub Actions. First-run installation of dependencies on clean destination computers has not yet been verified. The [product readiness review](RELEASE_READINESS.md) identifies the work needed before calling AI Workshop a complete standalone package.
+This is a prerelease build merged through [pull request #1](https://github.com/scottwells83/ai-workshop/pull/1). The Windows EXE, macOS DMG, and Linux `.run` built successfully from the merged `main` commit and are stored in [release-assets/2026-10-08](release-assets/2026-10-08/). First-run installation of dependencies on clean destination computers has not yet been verified. The [product readiness review](RELEASE_READINESS.md) identifies the work needed before calling AI Workshop a complete standalone package.
 
 ## What changed
 
@@ -19,19 +19,19 @@ This is a prerelease build in [pull request #1](https://github.com/scottwells83/
 
 ### Windows
 
-1. Download the `ai-workshop-windows-installer` artifact from the latest successful [Windows workflow run](https://github.com/scottwells83/ai-workshop/actions/workflows/build-windows-installer.yml). Extract the artifact and open `AI-Workshop-Windows-Setup.exe`.
+1. Download [AI-Workshop-Windows-Setup.exe](release-assets/2026-10-08/AI-Workshop-Windows-Setup.exe) and open it.
 2. Setup places the Workshop at `%USERPROFILE%\ai-workshop`. It downloads Ollama, creates the seven required Workshop models, supplies Python 3.11 through uv when needed, and runs the Workshop doctor check. Internet access is required. Docker Desktop and Open WebUI are optional.
 3. Keep the setup output if it reports a dependency or permission step that still needs attention. The EXE is unsigned, so Windows may show a publisher warning.
 
 ### macOS
 
-1. Download the `ai-workshop-macos-installer` artifact from the latest successful [macOS workflow run](https://github.com/scottwells83/ai-workshop/actions/workflows/build-macos-installer.yml). Open `AI-Workshop-macOS.dmg`, then double-click `ai-workshop/Install AI Workshop.command` inside it.
+1. Download [AI-Workshop-macOS.dmg](release-assets/2026-10-08/AI-Workshop-macOS.dmg), open it, then double-click `ai-workshop/Install AI Workshop.command` inside it.
 2. Setup places the Workshop at `~/ai-workshop`, installs Ollama if needed, creates the seven required models, makes Python 3.11 available through uv when needed, and runs the doctor check. Internet access is required. Docker Desktop and Open WebUI are optional.
 3. The DMG is unsigned and unnotarized, so macOS may ask you to approve opening it. Keep the setup output if any dependency needs attention.
 
 ### Linux
 
-1. Download the `ai-workshop-linux-installer` artifact from the successful [Linux workflow run](https://github.com/scottwells83/ai-workshop/actions/runs/37797742629). A local release-candidate package is also available. Ask a local-capable assistant to run `AI-Workshop-Linux-Setup.run`, or execute it in a terminal. Bash, tar, awk, and curl are bootstrap requirements.
+1. Download [AI-Workshop-Linux-Setup.run](release-assets/2026-10-08/AI-Workshop-Linux-Setup.run). Ask a local-capable assistant to run it, or execute it in a terminal. Bash, tar, awk, and curl are bootstrap requirements.
 2. Setup places the Workshop at `~/ai-workshop`, installs [Ollama](https://ollama.com/download) if missing, creates the seven required models, supplies Python 3.11 through uv when needed, and runs the doctor check. Internet access is required. Ollama's official installer may request system permission.
 3. Docker and Open WebUI are optional and are not installed by the Linux setup. If you only want to check the package, run the file with `--verify-only`; this does not install dependencies.
 

@@ -8,6 +8,8 @@ The canonical machine-readable name is `ai-workshop` (folder, repository, packag
 
 ## First setup
 
+The [October 8 installer files](release-assets/2026-10-08/) are included in this repository for direct download. Their [SHA-256 checksums](release-assets/2026-10-08/SHA256SUMS) and source build commit are recorded alongside them. Setup downloads Ollama, Python, and model weights when needed; those dependencies are not embedded in the repository.
+
 - macOS: double-click `Install AI Workshop.command` from the extracted package.
 - Windows: double-click `Install AI Workshop.cmd` from the extracted package.
 - Linux: run `AI-Workshop-Linux-Setup.run` from a local-capable assistant or terminal. It extracts the Workshop and starts `Install AI Workshop.sh`.
