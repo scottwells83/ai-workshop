@@ -1,6 +1,6 @@
 # Current release
 
-AI Workshop prerelease package dated October 8, 2026. The installers were built from merged `main` commit `3a845351256b6b9f4426101caaa2f83b386aef17`.
+AI Workshop prerelease package dated October 8, 2026. The installers were built from merged `main` commit `e1d2a8a7523826803aebe1f66f7eca294068abdf`.
 
 | Item | File |
 | --- | --- |
@@ -14,6 +14,6 @@ AI Workshop prerelease package dated October 8, 2026. The installers were built 
 | Linux installer | [AI-Workshop-Linux-Setup.run](AI-Workshop-Linux-Setup.run) |
 | File hashes | [SHA256SUMS](SHA256SUMS) |
 
-The installer builds came from successful GitHub Actions runs: [Windows 37819229187](https://github.com/scottwells83/ai-workshop/actions/runs/37819229187), [macOS 37819229226](https://github.com/scottwells83/ai-workshop/actions/runs/37819229226), and [Linux 37819229243](https://github.com/scottwells83/ai-workshop/actions/runs/37819229243). First-run installation on clean destination machines is still unverified.
+The installer builds came from successful GitHub Actions runs: [Windows 37825636799](https://github.com/scottwells83/ai-workshop/actions/runs/37825636799), [macOS 37825636656](https://github.com/scottwells83/ai-workshop/actions/runs/37825636656), and [Linux 37825636675](https://github.com/scottwells83/ai-workshop/actions/runs/37825636675). First-run installation on clean destination machines is still unverified.
 
 This folder is the repository delivery location for newly built installers and current release documents. Keep old builds and working renders out of it.
