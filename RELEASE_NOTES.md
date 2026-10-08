@@ -20,22 +20,26 @@ This is a prerelease build in [pull request #1](https://github.com/scottwells83/
 ### Windows
 
 1. Download the `ai-workshop-windows-installer` artifact from the latest successful [Windows workflow run](https://github.com/scottwells83/ai-workshop/actions/workflows/build-windows-installer.yml). Extract the artifact and open `AI-Workshop-Windows-Setup.exe`.
-2. Setup places the Workshop at `%USERPROFILE%\ai-workshop`. It downloads Ollama, creates the seven Workshop models, supplies Python 3.11 through uv when needed, and runs the Workshop doctor check. Internet access is required. Docker Desktop and Open WebUI are optional.
+2. Setup places the Workshop at `%USERPROFILE%\ai-workshop`. It downloads Ollama, creates the seven required Workshop models, supplies Python 3.11 through uv when needed, and runs the Workshop doctor check. Internet access is required. Docker Desktop and Open WebUI are optional.
 3. Keep the setup output if it reports a dependency or permission step that still needs attention. The EXE is unsigned, so Windows may show a publisher warning.
 
 ### macOS
 
 1. Download the `ai-workshop-macos-installer` artifact from the latest successful [macOS workflow run](https://github.com/scottwells83/ai-workshop/actions/workflows/build-macos-installer.yml). Open `AI-Workshop-macOS.dmg`, then double-click `ai-workshop/Install AI Workshop.command` inside it.
-2. Setup places the Workshop at `~/ai-workshop`, installs Ollama if needed, creates the seven models, makes Python 3.11 available through uv when needed, and runs the doctor check. Internet access is required. Docker Desktop and Open WebUI are optional.
+2. Setup places the Workshop at `~/ai-workshop`, installs Ollama if needed, creates the seven required models, makes Python 3.11 available through uv when needed, and runs the doctor check. Internet access is required. Docker Desktop and Open WebUI are optional.
 3. The DMG is unsigned and unnotarized, so macOS may ask you to approve opening it. Keep the setup output if any dependency needs attention.
 
 ### Linux
 
 1. Download the `ai-workshop-linux-installer` artifact from the successful [Linux workflow run](https://github.com/scottwells83/ai-workshop/actions/runs/37797742629). A local release-candidate package is also available. Ask a local-capable assistant to run `AI-Workshop-Linux-Setup.run`, or execute it in a terminal. Bash, tar, awk, and curl are bootstrap requirements.
-2. Setup places the Workshop at `~/ai-workshop`, installs [Ollama](https://ollama.com/download) if missing, creates the seven models, supplies Python 3.11 through uv when needed, and runs the doctor check. Internet access is required. Ollama's official installer may request system permission.
+2. Setup places the Workshop at `~/ai-workshop`, installs [Ollama](https://ollama.com/download) if missing, creates the seven required models, supplies Python 3.11 through uv when needed, and runs the doctor check. Internet access is required. Ollama's official installer may request system permission.
 3. Docker and Open WebUI are optional and are not installed by the Linux setup. If you only want to check the package, run the file with `--verify-only`; this does not install dependencies.
 
 Existing Workshop folders are preserved by the Windows and macOS setup launchers. Review source updates before replacing customized files. Personal memory and project data must be transferred separately through a private channel.
+
+## Optional local reviewer
+
+`local-reviewer` is an optional specialist for checking bounded text against supplied evidence. It is based on `qwen3:32b` (about 20 GB). Setup creates it only if that base model is already installed in Ollama; a new installation does not download the base model. `doctor` reports its availability separately and succeeds when the seven required models are present. Workshop jobs and the desktop Manager can use it when installed. A bounded local check returned the exact missing-information phrase without inventing reset steps; broader quality on Spirits support material remains unverified. Its review is advisory and must be checked against the source before acceptance.
 
 ## Add the universal instructions
 

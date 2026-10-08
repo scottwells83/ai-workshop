@@ -23,6 +23,8 @@ MODELS = {
     "local-worker", "local-drafter", "chief-of-staff", "watcher",
     "sweeper", "archivist", "usage-analyst",
 }
+# Optional heavier models: accepted in jobs.json when installed, never required by `doctor`.
+OPTIONAL_MODELS = {"local-reviewer"}
 USAGE_LOG = ROOT / "usage-log.jsonl"
 
 
@@ -87,8 +89,8 @@ def validate_jobs(project: Path) -> tuple[int, list[dict]]:
         if not isinstance(job_id, str) or not ID.fullmatch(job_id) or job_id in seen:
             raise ValueError(f"Invalid or duplicate job id: {job_id!r}")
         seen.add(job_id)
-        if job.get("model") not in MODELS:
-            raise ValueError(f"{job_id}: model must be one of the installed workshop models")
+        if job.get("model") not in MODELS | OPTIONAL_MODELS:
+            raise ValueError(f"{job_id}: model must be a supported workshop model")
         category = job.get("category", "uncategorized")
         if not isinstance(category, str) or not re.fullmatch(r"[a-z][a-z0-9_-]{0,31}", category):
             raise ValueError(f"{job_id}: category must be a short lowercase identifier")
@@ -376,10 +378,14 @@ def doctor() -> int:
         names = {item.get("name", "").split(":")[0] for item in data.get("models", [])}
         print(f"Ollama: reachable at {API}")
         missing = sorted(MODELS - names)
+        for extra in sorted(OPTIONAL_MODELS):
+            status = ("available" if extra in names else
+                      "not installed (optional; no base-model download during setup)")
+            print(f"Optional model {extra}: {status}")
         if missing:
             print("Missing workshop models: " + ", ".join(missing))
             return 1
-        print("All seven workshop models are available")
+        print(f"All {len(MODELS)} workshop models are available")
         return 0
     except (OSError, ValueError, URLError) as exc:
         print(f"Ollama: unavailable ({exc})")

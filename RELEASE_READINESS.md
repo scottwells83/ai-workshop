@@ -26,7 +26,7 @@ AI Workshop now has a testable local desktop app preview. It starts an Ollama-ba
 
 ## High-value usability and efficiency improvements
 
-- Make a first-launch screen show dependency state, model readiness, available disk/RAM, and a one-click repair path. The current `doctor` checks Ollama and seven model names only.
+- Make a first-launch screen show dependency state, model readiness, available disk/RAM, and a one-click repair path. The current `doctor` checks Ollama and seven required model names, and reports optional `local-reviewer` availability; it does not benchmark model quality or hardware fit.
 - Keep Docker/Open WebUI genuinely optional during first setup. Windows and macOS setup currently attempts Docker/Open WebUI installation or startup after core setup, adding time and permission prompts to the default path.
 - Show a concise project timeline, current chunk, QA result, and final files in one place. Do not require the user to inspect `jobs.json` or run reports.
 - Store reusable source summaries and retrieve only task-relevant excerpts. Send a bounded brief to each local model or external service, with explicit token limits and usage accounting.

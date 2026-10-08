@@ -111,7 +111,16 @@ def create_project(title: str, workspace: str | None = None) -> Path:
     return path
 
 
-def tool_specs() -> list[dict]:
+def reviewer_available() -> bool:
+    try:
+        with urlopen(workshop.API + "/api/tags", timeout=2) as response:
+            models = json.load(response).get("models", [])
+        return any(item.get("name", "").split(":")[0] == "local-reviewer" for item in models)
+    except (OSError, ValueError, URLError):
+        return False
+
+
+def tool_specs(include_reviewer: bool = False) -> list[dict]:
     def spec(name, description, props, required):
         return {"type": "function", "function": {"name": name, "description": description,
                 "parameters": {"type": "object", "properties": props, "required": required}}}
@@ -122,7 +131,7 @@ def tool_specs() -> list[dict]:
         spec("read_project", "Read this project's durable project.md and current jobs.json.", {}, []),
         spec("write_file", "Create or replace a text file in the selected workspace; existing content is backed up.", {"path": string("Relative file path"), "content": string("Complete new text")}, ["path", "content"]),
         spec("run_check", "Run a bounded, read-only validation command inside the selected workspace.", {"argv": {"type": "array", "items": {"type": "string"}}, "cwd": string("Relative working directory, default .")}, ["argv"]),
-        spec("local_job", "Run a bounded brief through one Workshop local specialist and return its draft for review.", {"model": {"type": "string", "enum": ["local-worker", "local-drafter", "chief-of-staff"]}, "brief": string("Self-contained brief with Task, Context, Constraints, Deliverable, Definition of done")}, ["model", "brief"]),
+        spec("local_job", "Run a bounded brief through one Workshop local specialist and return its draft for review.", {"model": {"type": "string", "enum": ["local-worker", "local-drafter", "chief-of-staff"] + (["local-reviewer"] if include_reviewer else [])}, "brief": string("Self-contained brief with Task, Context, Constraints, Deliverable, Definition of done")}, ["model", "brief"]),
         spec("project_note", "Append a dated checkpoint to the project's durable project.md record.", {"note": string("Concise verified progress or next action")}, ["note"]),
         spec("outside_help", "Ask the configured outside AI provider only when local work cannot meet the task. Send a compact task packet.", {"task": string("The bounded question"), "context": string("Minimum facts needed")}, ["task", "context"]),
     ]
@@ -249,8 +258,10 @@ def do_tool(app: "App", project: Path, name: str, args: dict, request: str = "")
         result = subprocess.run(argv, cwd=cwd, text=True, capture_output=True, timeout=60, check=False)
         return {"exit_code": result.returncode, "stdout": result.stdout[-8000:], "stderr": result.stderr[-4000:]}
     if name == "local_job":
-        if args.get("model") not in {"local-worker", "local-drafter", "chief-of-staff"}:
-            raise ValueError("Choose local-worker, local-drafter, or chief-of-staff")
+        if args.get("model") not in {"local-worker", "local-drafter", "chief-of-staff", "local-reviewer"}:
+            raise ValueError("Choose local-worker, local-drafter, chief-of-staff, or local-reviewer")
+        if args["model"] == "local-reviewer" and not reviewer_available():
+            raise ValueError("Optional local-reviewer is not installed")
         brief = normalize_brief(args.get("brief", ""), request)
         ident = "app-" + secrets.token_hex(5)
         brief_name = ident + ".txt"
@@ -328,11 +339,12 @@ class App:
             raise ValueError("Manager is busy with another request")
         try:
             append_event(project, "user", prompt)
+            include_reviewer = reviewer_available()
             prior = [e for e in history(project) if e["role"] in {"user", "assistant"}][-8:]
             qa_request = "\n".join(e["text"] for e in prior if e["role"] == "user")
             system = ("You are the AI Workshop Manager in a local app. Use Ollama and local tools first. "
                       "Inspect relevant project files and perform authorized reversible work. Ask only for a material missing decision. "
-                      "Use local_job for bounded drafts when useful. Treat its output as unverified until checked against the task and source. "
+                      "Use local_job for bounded drafts when useful. Use optional local-reviewer for source-grounded checks only when it is installed. Treat every local output as unverified until checked against the task and source. "
                       "Use outside_help only when configured and local work cannot meet the task. Send the minimum context. "
                       "If a tool fails, correct its arguments or complete the task directly; never answer by explaining a tool-call error. "
                       "For a writing request, provide the requested writing in the final answer after checking any local draft. "
@@ -346,7 +358,7 @@ class App:
             messages += [{"role": e["role"], "content": e["text"][:6000]} for e in prior]
             actions = []
             for _ in range(8):
-                data = request_json(workshop.API + "/api/chat", {"model": "chief-of-staff", "messages": messages, "tools": tool_specs(), "stream": False, "options": {"num_ctx": 16384}}, timeout=600)
+                data = request_json(workshop.API + "/api/chat", {"model": "chief-of-staff", "messages": messages, "tools": tool_specs(include_reviewer), "stream": False, "options": {"num_ctx": 16384}}, timeout=600)
                 message = data.get("message", {})
                 calls = message.get("tool_calls") or []
                 if not calls:

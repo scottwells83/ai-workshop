@@ -76,6 +76,13 @@ foreach ($item in $models) {
     & $ollama.Source create $item[0] -f (Join-Path $dest $item[1])
     if ($LASTEXITCODE -ne 0) { throw "Model creation failed: $($item[0])" }
 }
+$installedNames = @((Invoke-RestMethod -Uri 'http://127.0.0.1:11434/api/tags' -TimeoutSec 5).models | ForEach-Object { $_.name })
+if ($installedNames -contains 'qwen3:32b') {
+    & $ollama.Source create local-reviewer -f (Join-Path $dest 'agents\Modelfile.reviewer')
+    if ($LASTEXITCODE -ne 0) { throw 'Optional local-reviewer model creation failed.' }
+} else {
+    Write-Host 'Skipping optional local-reviewer because qwen3:32b is not installed.'
+}
 
 $validPython = $false
 if (Get-Command py -ErrorAction SilentlyContinue) {
