@@ -84,6 +84,11 @@ if (-not $validPython -and -not (Test-Path $uvExe)) {
 if (-not $validPython -and -not (Test-Path $uvExe)) {
     throw 'Python 3.11+ or uv is required, but the uv runtime was not found after installation.'
 }
+if (-not $validPython) {
+    Write-Host 'Installing Python 3.11 through uv...'
+    & $uvExe python install 3.11
+    if ($LASTEXITCODE -ne 0) { throw 'Python 3.11 installation failed.' }
+}
 & (Join-Path $dest 'workshop.cmd') doctor
 if ($LASTEXITCODE -ne 0) { throw 'Workshop doctor check failed.' }
 

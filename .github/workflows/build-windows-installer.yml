@@ -1,0 +1,42 @@
+name: Build Windows installer
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/build-windows-installer.yml'
+      - 'installer/windows/**'
+      - 'install-windows.ps1'
+      - 'workshop.cmd'
+      - 'workshop.py'
+      - 'Modelfile*'
+      - 'agents/**'
+      - 'guides/**'
+      - 'templates/**'
+      - 'AGENTS.md'
+      - 'manager-instructions.md'
+      - 'chatgpt-custom-instructions.md'
+      - 'README.md'
+
+jobs:
+  build:
+    runs-on: windows-2022
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build installer
+        shell: pwsh
+        run: ./installer/windows/build.ps1
+      - name: Check installer exists
+        shell: pwsh
+        run: |
+          $path = 'dist/windows/AI-Workshop-Windows-Setup.exe'
+          if (-not (Test-Path $path)) { throw "Missing $path" }
+          Get-FileHash $path -Algorithm SHA256
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-workshop-windows-installer
+          path: dist/windows/AI-Workshop-Windows-Setup.exe
+          if-no-files-found: error
