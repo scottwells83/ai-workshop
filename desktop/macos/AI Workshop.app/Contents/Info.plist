@@ -3,6 +3,7 @@
 <plist version="1.0"><dict>
 <key>CFBundleDevelopmentRegion</key><string>en</string>
 <key>CFBundleExecutable</key><string>AIWorkshop</string>
+<key>CFBundleIconFile</key><string>AIWorkshop</string>
 <key>CFBundleIdentifier</key><string>org.aiworkshop.desktop</string>
 <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
 <key>CFBundleName</key><string>AI Workshop</string>

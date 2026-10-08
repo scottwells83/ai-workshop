@@ -28,6 +28,8 @@ for name in FILES:
     shutil.copy2(ROOT / name, target)
 for name in DIRECTORIES:
     shutil.copytree(ROOT / name, DEST / name)
+(DEST / "desktop" / "windows").mkdir(parents=True)
+shutil.copy2(ROOT / "desktop" / "windows" / "AIWorkshop.ico", DEST / "desktop" / "windows" / "AIWorkshop.ico")
 for name in ("projects", "memory"):
     (DEST / name).mkdir()
 (DEST / "projects" / "README.md").write_text("# AI Workshop projects\n", encoding="utf-8")

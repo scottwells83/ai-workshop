@@ -391,6 +391,16 @@ class App:
 def desktop_window(address: str) -> None:
     import webview
     if sys.platform == "darwin":
+        icon = ROOT / "AI Workshop.app" / "Contents" / "Resources" / "AIWorkshop.icns"
+        if not icon.is_file():
+            icon = ROOT / "desktop" / "macos" / "AI Workshop.app" / "Contents" / "Resources" / "AIWorkshop.icns"
+    elif sys.platform == "win32":
+        icon = ROOT / "desktop" / "windows" / "AIWorkshop.ico"
+    else:
+        icon = ROOT / "desktop" / "ai-workshop.svg"
+        if not icon.is_file():
+            icon = ROOT / "desktop" / "linux" / "ai-workshop.svg"
+    if sys.platform == "darwin":
         try:
             from Foundation import NSProcessInfo
             NSProcessInfo.processInfo().setProcessName_("AI Workshop")
@@ -400,7 +410,7 @@ def desktop_window(address: str) -> None:
     webview.create_window("AI Workshop", address, width=1280, height=840,
                           min_size=(680, 520), background_color="#0b1018",
                           text_select=True)
-    webview.start()
+    webview.start(icon=str(icon) if icon.is_file() else None)
 
 
 def serve(app: App, port: int = 0, initial: str = "", workspace: str = "", desktop: bool = False) -> None:

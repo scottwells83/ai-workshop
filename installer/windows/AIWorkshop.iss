@@ -23,7 +23,7 @@ WizardStyle=modern
 Source: "{#SourcePath}\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs onlyifdoesntexist
 
 [Icons]
-Name: "{userprograms}\AI Workshop"; Filename: "{app}\.desktop-venv\Scripts\pythonw.exe"; Parameters: """{app}\workshop.py"" app --desktop"; WorkingDir: "{app}"
+Name: "{userprograms}\AI Workshop"; Filename: "{app}\.desktop-venv\Scripts\pythonw.exe"; Parameters: """{app}\workshop.py"" app --desktop"; WorkingDir: "{app}"; IconFilename: "{app}\desktop\windows\AIWorkshop.ico"
 
 [Code]
 procedure CurStepChanged(CurStep: TSetupStep);
