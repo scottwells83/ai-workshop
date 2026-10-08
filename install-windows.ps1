@@ -15,8 +15,21 @@ $codexDir = Join-Path $env:USERPROFILE '.codex'
 $codexInstructions = Join-Path $codexDir 'AGENTS.md'
 if (-not (Test-Path $codexInstructions)) {
     New-Item -ItemType Directory -Path $codexDir -Force | Out-Null
-    Copy-Item (Join-Path $dest 'chatgpt-custom-instructions.md') $codexInstructions
+    Copy-Item (Join-Path $dest 'universal-custom-instructions.md') $codexInstructions
     Write-Host 'Added the short Codex entry instructions.'
+}
+
+$opencodeInstructions = Join-Path $env:USERPROFILE '.config\opencode\AGENTS.md'
+if (-not (Test-Path $opencodeInstructions)) {
+    New-Item -ItemType Directory -Path (Split-Path -Parent $opencodeInstructions) -Force | Out-Null
+    Copy-Item (Join-Path $dest 'universal-custom-instructions.md') $opencodeInstructions
+    Write-Host 'Added OpenCode user instructions.'
+}
+$copilotInstructions = Join-Path $env:USERPROFILE '.copilot\copilot-instructions.md'
+if (-not (Test-Path $copilotInstructions)) {
+    New-Item -ItemType Directory -Path (Split-Path -Parent $copilotInstructions) -Force | Out-Null
+    Copy-Item (Join-Path $dest 'universal-custom-instructions.md') $copilotInstructions
+    Write-Host 'Added GitHub Copilot CLI user instructions.'
 }
 
 if (-not (Get-Command ollama -ErrorAction SilentlyContinue)) {
@@ -63,6 +76,13 @@ foreach ($item in $models) {
     & $ollama.Source create $item[0] -f (Join-Path $dest $item[1])
     if ($LASTEXITCODE -ne 0) { throw "Model creation failed: $($item[0])" }
 }
+$installedNames = @((Invoke-RestMethod -Uri 'http://127.0.0.1:11434/api/tags' -TimeoutSec 5).models | ForEach-Object { $_.name })
+if ($installedNames -contains 'qwen3:32b') {
+    & $ollama.Source create local-reviewer -f (Join-Path $dest 'agents\Modelfile.reviewer')
+    if ($LASTEXITCODE -ne 0) { throw 'Optional local-reviewer model creation failed.' }
+} else {
+    Write-Host 'Skipping optional local-reviewer because qwen3:32b is not installed.'
+}
 
 $validPython = $false
 if (Get-Command py -ErrorAction SilentlyContinue) {
@@ -84,8 +104,34 @@ if (-not $validPython -and -not (Test-Path $uvExe)) {
 if (-not $validPython -and -not (Test-Path $uvExe)) {
     throw 'Python 3.11+ or uv is required, but the uv runtime was not found after installation.'
 }
+if (-not $validPython) {
+    Write-Host 'Installing Python 3.11 through uv...'
+    & $uvExe python install 3.11
+    if ($LASTEXITCODE -ne 0) { throw 'Python 3.11 installation failed.' }
+}
 & (Join-Path $dest 'workshop.cmd') doctor
 if ($LASTEXITCODE -ne 0) { throw 'Workshop doctor check failed.' }
+
+$webView2Id = '{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}'
+$webView2Keys = @(
+    "HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\$webView2Id",
+    "HKLM:\SOFTWARE\Microsoft\EdgeUpdate\Clients\$webView2Id",
+    "HKCU:\Software\Microsoft\EdgeUpdate\Clients\$webView2Id"
+)
+$webView2Found = $false
+foreach ($key in $webView2Keys) {
+    $version = (Get-ItemProperty -Path $key -Name pv -ErrorAction SilentlyContinue).pv
+    if ($version -and $version -ne '0.0.0.0') { $webView2Found = $true; break }
+}
+if (-not $webView2Found) {
+    Write-Host 'Installing Microsoft WebView2 Runtime for the desktop window...'
+    $webView2Setup = Join-Path $env:TEMP 'MicrosoftEdgeWebView2Setup.exe'
+    Invoke-WebRequest -Uri 'https://go.microsoft.com/fwlink/p/?linkid=2124703' -OutFile $webView2Setup
+    $process = Start-Process -FilePath $webView2Setup -ArgumentList '/silent', '/install' -Wait -PassThru
+    if ($process.ExitCode -ne 0) { throw "WebView2 Runtime setup failed with exit code $($process.ExitCode)." }
+}
+& (Join-Path $dest 'workshop.cmd') desktop-setup
+if ($LASTEXITCODE -ne 0) { throw 'Desktop window dependency setup failed.' }
 
 $env:PATH = "$env:ProgramFiles\Docker\Docker\resources\bin;$env:PATH"
 $docker = Get-Command docker -ErrorAction SilentlyContinue

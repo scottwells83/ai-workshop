@@ -1,0 +1,59 @@
+name: Build Windows installer
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/build-windows-installer.yml'
+      - 'installer/windows/**'
+      - 'install-windows.ps1'
+      - 'workshop.cmd'
+      - 'workshop.py'
+      - 'workshop_app.py'
+      - 'desktop_setup.py'
+      - 'desktop/**'
+      - 'Open AI Workshop.cmd'
+      - 'ui/**'
+      - 'Modelfile*'
+      - 'agents/**'
+      - 'guides/**'
+      - 'templates/**'
+      - 'AGENTS.md'
+      - 'manager-instructions.md'
+      - 'chatgpt-custom-instructions.md'
+      - 'universal-custom-instructions.md'
+      - 'gemini-ai-workshop-instructions.md'
+      - '.github/copilot-instructions.md'
+      - 'RELEASE_NOTES.md'
+      - 'RELEASE_READINESS.md'
+      - 'README.md'
+
+jobs:
+  build:
+    runs-on: windows-2022
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check Windows setup syntax
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $parseErrors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path 'install-windows.ps1'), [ref]$tokens, [ref]$parseErrors) | Out-Null
+          if ($parseErrors.Count) { throw ($parseErrors | Out-String) }
+      - name: Build installer
+        shell: pwsh
+        run: ./installer/windows/build.ps1
+      - name: Check installer exists
+        shell: pwsh
+        run: |
+          $path = 'dist/windows/AI-Workshop-Windows-Setup.exe'
+          if (-not (Test-Path $path)) { throw "Missing $path" }
+          Get-FileHash $path -Algorithm SHA256
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-workshop-windows-installer
+          path: dist/windows/AI-Workshop-Windows-Setup.exe
+          if-no-files-found: error

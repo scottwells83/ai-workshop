@@ -2,6 +2,7 @@
 set -euo pipefail
 SOURCE="$(cd "$(dirname "$0")" && pwd)"
 DEST="$HOME/ai-workshop"
+export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
 
 echo 'AI Workshop — a local-first workspace for AI-assisted projects (macOS setup)'
 if [[ "$SOURCE" != "$DEST" ]]; then
@@ -15,8 +16,18 @@ fi
 
 mkdir -p "$HOME/.codex"
 if [[ ! -e "$HOME/.codex/AGENTS.md" ]]; then
-  cp "$DEST/chatgpt-custom-instructions.md" "$HOME/.codex/AGENTS.md"
+  cp "$DEST/universal-custom-instructions.md" "$HOME/.codex/AGENTS.md"
   echo 'Added the short Codex entry instructions.'
+fi
+
+mkdir -p "$HOME/.config/opencode" "$HOME/.copilot"
+if [[ ! -e "$HOME/.config/opencode/AGENTS.md" ]]; then
+  cp "$DEST/universal-custom-instructions.md" "$HOME/.config/opencode/AGENTS.md"
+  echo 'Added OpenCode user instructions.'
+fi
+if [[ ! -e "$HOME/.copilot/copilot-instructions.md" ]]; then
+  cp "$DEST/universal-custom-instructions.md" "$HOME/.copilot/copilot-instructions.md"
+  echo 'Added GitHub Copilot CLI user instructions.'
 fi
 
 if ! command -v ollama >/dev/null 2>&1; then
@@ -26,6 +37,11 @@ if ! command -v ollama >/dev/null 2>&1; then
   curl -fsSL https://ollama.com/install.sh -o "$TMP"
   sh "$TMP"
 fi
+if ! command -v ollama >/dev/null 2>&1 && [[ -x /Applications/Ollama.app/Contents/Resources/ollama ]]; then
+  mkdir -p "$HOME/.local/bin"
+  ln -sfn /Applications/Ollama.app/Contents/Resources/ollama "$HOME/.local/bin/ollama"
+fi
+command -v ollama >/dev/null 2>&1 || { echo 'Ollama command unavailable after installation.' >&2; exit 1; }
 RAM_BYTES="$(sysctl -n hw.memsize)"
 if (( RAM_BYTES >= 25769803776 )); then
   export OLLAMA_NUM_PARALLEL=2
@@ -58,7 +74,13 @@ if ! command -v python3 >/dev/null 2>&1 ||
     rm -f "$UV_TMP"
   fi
 fi
+if ! command -v python3 >/dev/null 2>&1 ||
+   ! python3 -c 'import sys; assert sys.version_info >= (3, 11)' >/dev/null 2>&1; then
+  "$HOME/.local/bin/uv" python install 3.11
+fi
 "$DEST/workshop.command" doctor
+"$DEST/workshop.command" desktop-setup
+echo "Desktop app: $DEST/AI Workshop.app"
 
 export PATH="$HOME/.docker/bin:/Applications/Docker.app/Contents/Resources/bin:$PATH"
 if ! command -v docker >/dev/null 2>&1 && [[ ! -d /Applications/Docker.app ]]; then

@@ -4,22 +4,27 @@
 
 The Manager entry point is `AGENTS.md`; read it only when a workshop task is active. Reusable Workshop files are kept in the root Git history; `projects/`, `memory/`, and `usage-log.jsonl` are private operating data and must stay out of that repository. The Manager creates project workspaces, dispatches bounded local runs, checks results, and delivers finished files. The local models do not have file or command permissions by themselves; the Manager's host environment invokes `workshop.py` for them.
 
-The canonical machine-readable name is `ai-workshop` (folder, repository, package, and service identifiers); the human-facing product name is **AI Workshop**. The source repository is the private GitHub repository [scottwells83/ai-workshop](https://github.com/scottwells83/ai-workshop).
+The canonical machine-readable name is `ai-workshop` (folder, repository, package, and service identifiers); the human-facing product name is **AI Workshop**. The source repository is [scottwells83/ai-workshop](https://github.com/scottwells83/ai-workshop).
 
 ## First setup
 
 - macOS: double-click `Install AI Workshop.command` from the extracted package.
 - Windows: double-click `Install AI Workshop.cmd` from the extracted package.
+- Linux: run `AI-Workshop-Linux-Setup.run` from a local-capable assistant or terminal. It extracts the Workshop and starts `Install AI Workshop.sh`.
 
-The setup creates `~/ai-workshop` or `%USERPROFILE%\ai-workshop`, adds a short Codex global instruction file if none exists, installs Ollama if needed, creates the seven workshop models, and checks the local runner. It attempts to set up Open WebUI through Docker Desktop. Operating-system permission, Docker license, or app sign-in prompts may still need the computer owner. Re-running setup does not overwrite an existing workshop folder. On an existing computer, use the Manager to review package changes before replacing customized files.
+The setup creates `~/ai-workshop` or `%USERPROFILE%\ai-workshop`, adds Codex, OpenCode, and GitHub Copilot CLI user instruction files if absent, installs Ollama if needed, creates the seven required workshop models, and checks the local runner. If `qwen3:32b` is already present in Ollama, setup also creates the optional `local-reviewer` without downloading its roughly 20 GB base model. The Windows and macOS launchers attempt to set up Open WebUI through Docker Desktop; the Linux installer leaves Docker and Open WebUI optional. Operating-system permission, Docker license, or app sign-in prompts may still need the computer owner. Re-running setup does not overwrite an existing workshop folder. On an existing computer, use the Manager to review package changes before replacing customized files.
 
-The model roster includes the general `local-worker` and `local-drafter`, four personal workflow agents, and `usage-analyst` for reviewing local-versus-cloud usage records and proposing evidence-based routing improvements.
+The required model roster includes the general `local-worker` and `local-drafter`, four personal workflow agents, and `usage-analyst` for reviewing local-versus-cloud usage records. The optional `local-reviewer` is a heavier, source-grounded reviewer built from `qwen3:32b` only when that base model is already installed. Its output still requires Manager QA.
+
+This prerelease includes a standalone desktop window with project chat, a tool-capable Ollama Manager, bounded local jobs, and optional outside API escalation. It is a testable preview, not a fully verified standalone product. See [RELEASE_READINESS.md](RELEASE_READINESS.md) for release gaps.
 
 Draw Things is optional and currently available for Apple devices; it is not required for text projects or installed by this setup. Model downloads happen separately on each computer. The ZIP does not carry Ollama model blobs, Docker data, or ChatGPT account settings.
 
 ## Using the Manager
 
-Open the `ai-workshop` folder in a local-capable ChatGPT Work or Codex session and say what you want to do. For an ordinary ChatGPT chat, the short text in `chatgpt-custom-instructions.md` can start intake, but a chat without local access cannot execute the runner. In Codex, this folder's `AGENTS.md` is discovered as project guidance. A ChatGPT Project is created only when the active product surface exposes that capability; the Manager must confirm it exists.
+Double-click `AI Workshop.app` or `Open AI Workshop.command` on macOS, use the AI Workshop Start menu shortcut or `Open AI Workshop.cmd` on Windows, or choose AI Workshop from the Linux applications menu. These open a separate desktop window. If the desktop web view cannot start, the launcher opens the browser interface. Start a project there and work with the local Manager. In Settings, uncheck **Open AI Workshop automatically for new work** to keep new tasks in your current assistant; manual launch still works. Outside AI is off until you configure an API provider and key in Settings.
+
+Open the `ai-workshop` folder in a local-capable AI session and say what you want to do. Use the copy-ready text in `universal-custom-instructions.md` in ChatGPT, Codex, Claude, Gemini, Meta Muse, OpenCode, Cursor, GitHub Copilot, or another assistant's personal-instruction field. For a Gemini-focused Markdown version, use `gemini-ai-workshop-instructions.md`. A chat without local access cannot execute the runner. In Codex, this folder's `AGENTS.md` is discovered as project guidance. A ChatGPT Project is created only when the active product surface exposes that capability; the Manager must confirm it exists.
 
 ## Portability
 

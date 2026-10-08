@@ -23,6 +23,8 @@ MODELS = {
     "local-worker", "local-drafter", "chief-of-staff", "watcher",
     "sweeper", "archivist", "usage-analyst",
 }
+# Optional heavier models: accepted in jobs.json when installed, never required by `doctor`.
+OPTIONAL_MODELS = {"local-reviewer"}
 USAGE_LOG = ROOT / "usage-log.jsonl"
 
 
@@ -87,8 +89,8 @@ def validate_jobs(project: Path) -> tuple[int, list[dict]]:
         if not isinstance(job_id, str) or not ID.fullmatch(job_id) or job_id in seen:
             raise ValueError(f"Invalid or duplicate job id: {job_id!r}")
         seen.add(job_id)
-        if job.get("model") not in MODELS:
-            raise ValueError(f"{job_id}: model must be one of the installed workshop models")
+        if job.get("model") not in MODELS | OPTIONAL_MODELS:
+            raise ValueError(f"{job_id}: model must be a supported workshop model")
         category = job.get("category", "uncategorized")
         if not isinstance(category, str) or not re.fullmatch(r"[a-z][a-z0-9_-]{0,31}", category):
             raise ValueError(f"{job_id}: category must be a short lowercase identifier")
@@ -376,10 +378,14 @@ def doctor() -> int:
         names = {item.get("name", "").split(":")[0] for item in data.get("models", [])}
         print(f"Ollama: reachable at {API}")
         missing = sorted(MODELS - names)
+        for extra in sorted(OPTIONAL_MODELS):
+            status = ("available" if extra in names else
+                      "not installed (optional; no base-model download during setup)")
+            print(f"Optional model {extra}: {status}")
         if missing:
             print("Missing workshop models: " + ", ".join(missing))
             return 1
-        print("All seven workshop models are available")
+        print(f"All {len(MODELS)} workshop models are available")
         return 0
     except (OSError, ValueError, URLError) as exc:
         print(f"Ollama: unavailable ({exc})")
@@ -394,6 +400,12 @@ def main() -> int:
     run = sub.add_parser("run", help="run a project's jobs.json")
     run.add_argument("project")
     run.add_argument("--force", action="store_true", help="archive and replace existing outputs")
+    app = sub.add_parser("app", help="open the local AI Workshop interface")
+    app.add_argument("--prompt", default="", help="start a project with this objective")
+    app.add_argument("--workspace", default="", help="folder the new project may work in")
+    app.add_argument("--handoff", action="store_true", help="respect the saved automatic handoff preference")
+    app.add_argument("--desktop", action="store_true", help="open a standalone desktop window")
+    sub.add_parser("desktop-setup", help="install the desktop web view in an isolated environment")
     sub.add_parser("doctor", help="check required local workshop models")
     usage = sub.add_parser("usage", help="record or summarize workshop resource usage")
     usage_sub = usage.add_subparsers(dest="usage_command", required=True)
@@ -426,6 +438,14 @@ def main() -> int:
             return 0
         if args.command == "run":
             return run_jobs(resolve_project(args.project), args.force)
+        if args.command == "app":
+            from workshop_app import launch
+            launch(args.prompt, args.workspace, args.handoff, args.desktop)
+            return 0
+        if args.command == "desktop-setup":
+            from desktop_setup import setup
+            setup()
+            return 0
         if args.command == "usage":
             if args.usage_command == "add":
                 return log_chatgpt_usage(args)
