@@ -2,6 +2,11 @@
 
 This file records user-facing AI Workshop changes. Keep entries factual and update it when code, installers, or release documents change. The [current release](https://github.com/scottwells83/ai-workshop/tree/main/current%20release/) folder contains the installers and documents intended for download.
 
+## October 9 2026 task-neutral Workshop scope
+
+- Clarified the universal, Gemini, and Workshop entry instructions: the workflow applies to every request regardless of topic or output. Simple requests remain lightweight and do not require unnecessary project folders or agent jobs.
+- Automatic local handoff now describes tasks that benefit from Workshop tools or continuing local state, rather than limiting applicability to new or resumed projects.
+
 ## October 9 2026 Gemini project scope clarification
 
 - Clarified that AI Workshop applies to books, bedtime stories, other creative writing, research, documents, software, and other multi-step projects. The Gemini-specific Markdown no longer describes the framework as development-only.
