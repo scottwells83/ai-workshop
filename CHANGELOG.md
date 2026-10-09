@@ -2,6 +2,11 @@
 
 This file records user-facing AI Workshop changes. Keep entries factual and update it when code, installers, or release documents change. The [current release](https://github.com/scottwells83/ai-workshop/tree/main/current%20release/) folder contains the installers and documents intended for download.
 
+## October 9 2026 Gemini project scope clarification
+
+- Clarified that AI Workshop applies to books, bedtime stories, other creative writing, research, documents, software, and other multi-step projects. The Gemini-specific Markdown no longer describes the framework as development-only.
+- Clarified that Gemini should report whether it actually accessed Workshop files or ran the local app, separately from whether it followed the instructions.
+
 ## October 8 2026 Ollama base-model recovery
 
 - Windows setup now checks the `llama3.2:3b` and `llama3.1:8b` base models before creating Workshop agents. It pulls a base model when Ollama cannot read it, then verifies it again.
