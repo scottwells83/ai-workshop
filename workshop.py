@@ -26,12 +26,69 @@ MODELS = {
 # Optional heavier models: accepted in jobs.json when installed, never required by `doctor`.
 OPTIONAL_MODELS = {"local-reviewer"}
 USAGE_LOG = ROOT / "usage-log.jsonl"
+ROUTING_OUTCOMES = {"entered_workshop", "unavailable", "external_escalation"}
+ROUTING_REASONS = {
+    "none", "no_local_access", "workshop_not_installed", "auto_handoff_disabled",
+    "launcher_failed", "manager_error", "local_capability_gap",
+    "outside_provider_unconfigured", "outside_service_required", "user_preference", "unknown",
+}
+ROUTING_SURFACE = re.compile(r"^[a-z][a-z0-9-]{0,31}$")
+ROUTING_CAPABILITY = re.compile(r"^[a-z][a-z0-9-]{0,47}$")
+TASK_EXECUTORS = {"workshop", "hybrid", "external", "unknown"}
+TASK_STATUSES = {"responded", "failed"}
 
 
 def append_usage(record: dict) -> None:
     USAGE_LOG.parent.mkdir(parents=True, exist_ok=True)
     with USAGE_LOG.open("a", encoding="utf-8") as log:
         log.write(json.dumps(record, separators=(",", ":")) + "\n")
+
+
+def record_routing(outcome: str, reason: str, surface: str, capability: str = "unknown",
+                   project: str | None = None, recorded_by: str = "assistant") -> dict:
+    """Record a routing result without storing the request or its source material."""
+    if outcome not in ROUTING_OUTCOMES:
+        raise ValueError("Invalid routing outcome")
+    if reason not in ROUTING_REASONS or (outcome == "entered_workshop") != (reason == "none"):
+        raise ValueError("Routing reason must be none only for an entered Workshop")
+    if not ROUTING_SURFACE.fullmatch(surface):
+        raise ValueError("Routing surface must be a short lowercase label")
+    if not ROUTING_CAPABILITY.fullmatch(capability):
+        raise ValueError("Routing capability must be a short lowercase label")
+    if project is not None and not ID.fullmatch(project):
+        raise ValueError("Invalid project ID")
+    if recorded_by not in {"launcher", "manager", "assistant", "backfill"}:
+        raise ValueError("Invalid routing record source")
+    record = {
+        "recorded_at": datetime.now(timezone.utc).isoformat(),
+        "event_type": "routing", "surface": surface, "outcome": outcome,
+        "reason": reason, "capability": capability, "project": project,
+        "recorded_by": recorded_by,
+    }
+    append_usage(record)
+    return record
+
+
+def record_task_outcome(executor: str, status: str, surface: str,
+                        project: str | None = None, capability: str = "unknown",
+                        recorded_by: str = "assistant") -> dict:
+    """Record who performed one request; a response is not a QA acceptance."""
+    if executor not in TASK_EXECUTORS or status not in TASK_STATUSES:
+        raise ValueError("Invalid task executor or status")
+    if not ROUTING_SURFACE.fullmatch(surface) or not ROUTING_CAPABILITY.fullmatch(capability):
+        raise ValueError("Task labels must be short and lowercase")
+    if project is not None and not ID.fullmatch(project):
+        raise ValueError("Invalid project ID")
+    if recorded_by not in {"manager", "assistant", "backfill"}:
+        raise ValueError("Invalid task record source")
+    record = {
+        "recorded_at": datetime.now(timezone.utc).isoformat(),
+        "event_type": "task_outcome", "surface": surface, "executor": executor,
+        "status": status, "capability": capability, "project": project,
+        "recorded_by": recorded_by,
+    }
+    append_usage(record)
+    return record
 
 
 def slugify(name: str) -> str:
@@ -275,12 +332,33 @@ def log_qa(args: argparse.Namespace) -> int:
     return 0
 
 
-def usage_summary(project_filter: str | None = None, since: str | None = None) -> int:
-    if since:
+def log_routing(args: argparse.Namespace) -> int:
+    record_routing(args.outcome, args.reason, args.surface, args.capability,
+                   args.project, "backfill")
+    print(f"Routing recorded: {USAGE_LOG}")
+    return 0
+
+
+def log_task_outcome(args: argparse.Namespace) -> int:
+    record_task_outcome(args.executor, args.status, args.surface, args.project,
+                        args.capability, "backfill")
+    print(f"Task outcome recorded: {USAGE_LOG}")
+    return 0
+
+
+def usage_summary(project_filter: str | None = None, since: str | None = None,
+                  through: str | None = None, day: str | None = None) -> int:
+    for label, value in (("--since", since), ("--through", through), ("--day", day)):
+        if not value:
+            continue
         try:
-            datetime.strptime(since, "%Y-%m-%d")
+            datetime.strptime(value, "%Y-%m-%d")
         except ValueError as exc:
-            raise ValueError("--since must use YYYY-MM-DD") from exc
+            raise ValueError(f"{label} must use YYYY-MM-DD") from exc
+    if since and through and since > through:
+        raise ValueError("--since cannot be after --through")
+    if day and (since or through):
+        raise ValueError("--day cannot be combined with --since or --through")
     records = []
     if USAGE_LOG.exists():
         for line in USAGE_LOG.read_text(encoding="utf-8").splitlines():
@@ -290,13 +368,18 @@ def usage_summary(project_filter: str | None = None, since: str | None = None) -
         records = [r for r in records if r.get("project") == project_filter]
     if since:
         records = [r for r in records if r.get("recorded_at", "")[:10] >= since]
+    if through:
+        records = [r for r in records if r.get("recorded_at", "")[:10] <= through]
+    if day:
+        records = [r for r in records if datetime.fromisoformat(r["recorded_at"]).astimezone().date().isoformat() == day]
     is_skipped = lambda r: r.get("event_type") == "local_job" and r.get("status") == "skipped"
     surfaces = sorted({r.get("surface", "unknown") for r in records
-                       if r.get("event_type") != "local_job_qa" and not is_skipped(r)})
-    summary = {"records": len(records), "usage_log": str(USAGE_LOG), "surfaces": {}}
+                       if r.get("event_type") not in {"local_job_qa", "routing", "task_outcome"} and not is_skipped(r)})
+    summary = {"records": len(records), "usage_log": str(USAGE_LOG), "local_day": day,
+               "surfaces": {}}
     for surface in surfaces:
         items = [r for r in records if r.get("surface") == surface
-                 and r.get("event_type") != "local_job_qa" and not is_skipped(r)]
+                 and r.get("event_type") not in {"local_job_qa", "routing", "task_outcome"} and not is_skipped(r)]
         measured = [r for r in items
                     if isinstance(r.get("prompt_tokens", r.get("input_tokens")), int)
                     and isinstance(r.get("response_tokens", r.get("output_tokens")), int)]
@@ -365,6 +448,37 @@ def usage_summary(project_filter: str | None = None, since: str | None = None) -
         bucket["review_seconds"] = (round(bucket.pop("_review_seconds"), 3)
                                      if bucket["reviewed_runs_with_time"] else None)
     summary["local_job_categories"] = categories
+    routing = [r for r in records if r.get("event_type") == "routing"]
+    summary["routing"] = {
+        "events": len(routing),
+        "by_outcome": {name: sum(r.get("outcome") == name for r in routing)
+                       for name in sorted(ROUTING_OUTCOMES)},
+        "unavailable_by_reason": {name: sum(r.get("outcome") == "unavailable" and r.get("reason") == name
+                                           for r in routing)
+                                  for name in sorted({r.get("reason") for r in routing
+                                                      if r.get("outcome") == "unavailable"})},
+        "unavailable_by_capability": {name: sum(r.get("outcome") == "unavailable" and r.get("capability") == name
+                                               for r in routing)
+                                      for name in sorted({r.get("capability") for r in routing
+                                                          if r.get("outcome") == "unavailable"})},
+        "by_surface": {name: sum(r.get("surface") == name for r in routing)
+                       for name in sorted({r.get("surface") for r in routing})},
+    }
+    task_outcomes = [r for r in records if r.get("event_type") == "task_outcome"]
+    responded = [r for r in task_outcomes if r.get("status") == "responded"]
+    total_responded = len(responded)
+    counts = {name: sum(r.get("executor") == name for r in responded)
+              for name in sorted(TASK_EXECUTORS)}
+    summary["task_execution"] = {
+        "logged_responses": total_responded,
+        "failed_requests": sum(r.get("status") == "failed" for r in task_outcomes),
+        "counts": counts,
+        "percent_of_logged_responses": {
+            name: (round(100 * count / total_responded, 1) if total_responded else None)
+            for name, count in counts.items()
+        },
+        "coverage": "Only requests recorded in the local Workshop log; cloud-only and unlogged work is excluded.",
+    }
     print(json.dumps(summary, indent=2))
     return 0
 
@@ -405,6 +519,7 @@ def main() -> int:
     app.add_argument("--workspace", default="", help="folder the new project may work in")
     app.add_argument("--handoff", action="store_true", help="respect the saved automatic handoff preference")
     app.add_argument("--desktop", action="store_true", help="open a standalone desktop window")
+    app.add_argument("--origin", default="unknown", help="initiating assistant label for routing metrics")
     sub.add_parser("desktop-setup", help="install the desktop web view in an isolated environment")
     sub.add_parser("doctor", help="check required local workshop models")
     usage = sub.add_parser("usage", help="record or summarize workshop resource usage")
@@ -428,9 +543,23 @@ def main() -> int:
     qa.add_argument("--review-seconds", type=float,
                     help="measured Manager review time for this exact run")
     qa.add_argument("--note", default="")
+    route = usage_sub.add_parser("route", help="record a Workshop routing result without prompt text")
+    route.add_argument("--surface", required=True, help="assistant or app label, such as chatgpt or codex")
+    route.add_argument("--outcome", choices=sorted(ROUTING_OUTCOMES), required=True)
+    route.add_argument("--reason", choices=sorted(ROUTING_REASONS), required=True)
+    route.add_argument("--capability", default="unknown", help="short non-sensitive capability label")
+    route.add_argument("--project", help="existing project ID, when applicable")
+    task = usage_sub.add_parser("task", help="record which service answered one request")
+    task.add_argument("--surface", required=True, help="initiating assistant label")
+    task.add_argument("--executor", choices=sorted(TASK_EXECUTORS), required=True)
+    task.add_argument("--status", choices=sorted(TASK_STATUSES), default="responded")
+    task.add_argument("--capability", default="unknown", help="short non-sensitive capability label")
+    task.add_argument("--project", help="existing project ID, when applicable")
     summary = usage_sub.add_parser("summary", help="summarize usage and QA records")
     summary.add_argument("--project")
     summary.add_argument("--since", help="include records on or after YYYY-MM-DD")
+    summary.add_argument("--through", help="include records on or before YYYY-MM-DD")
+    summary.add_argument("--day", help="include one date in the computer's local time zone")
     args = parser.parse_args()
     try:
         if args.command == "new":
@@ -440,7 +569,7 @@ def main() -> int:
             return run_jobs(resolve_project(args.project), args.force)
         if args.command == "app":
             from workshop_app import launch
-            launch(args.prompt, args.workspace, args.handoff, args.desktop)
+            launch(args.prompt, args.workspace, args.handoff, args.desktop, args.origin)
             return 0
         if args.command == "desktop-setup":
             from desktop_setup import setup
@@ -451,7 +580,11 @@ def main() -> int:
                 return log_chatgpt_usage(args)
             if args.usage_command == "qa":
                 return log_qa(args)
-            return usage_summary(args.project, args.since)
+            if args.usage_command == "route":
+                return log_routing(args)
+            if args.usage_command == "task":
+                return log_task_outcome(args)
+            return usage_summary(args.project, args.since, args.through, args.day)
         return doctor()
     except (ValueError, OSError, json.JSONDecodeError) as exc:
         print(f"Error: {exc}", file=sys.stderr)

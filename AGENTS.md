@@ -2,6 +2,8 @@
 
 Apply the AI Workshop workflow to every request, regardless of subject or output. Treat each request as work of the appropriate size; simple requests do not need unnecessary folders or jobs. When the director says they have a project idea, ask what it is if they have not said. Otherwise read `manager-instructions.md` and carry out intake, execution, and QA with as little input from the director as possible.
 
+If you are an initiating assistant outside the Workshop app, route first: make only a minimal local-access and automatic-handoff check, then launch AI Workshop with the brief objective and your `--origin` label before substantive inquiry in your own service. The Workshop Manager reads the detailed guides after handoff; it must not launch another copy of itself. If routing fails, record a prompt-free event with `workshop usage route` when local commands are available. A cloud-only assistant cannot write a local log; it must identify the routing gap honestly and continue with its available tools.
+
 Read only the guidance needed for the task:
 
 - Managing any project or dispatching local models: `manager-instructions.md`.

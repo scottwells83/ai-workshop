@@ -296,6 +296,14 @@ def do_tool(app: "App", project: Path, name: str, args: dict, request: str = "")
         return {"saved": True}
     if name == "outside_help":
         result = outside_help(app, args.get("task", ""), args.get("context", ""))
+        if result.get("answer"):
+            workshop.record_routing("external_escalation", "local_capability_gap", "workshop",
+                                    "outside-ai", project.name, "manager")
+        elif result.get("error"):
+            reason = ("outside_provider_unconfigured" if "not configured" in str(result["error"]).lower()
+                      else "unknown")
+            workshop.record_routing("unavailable", reason, "workshop",
+                                    "outside-ai", project.name, "manager")
         append_event(project, "tool", f"Outside AI: {result.get('provider', 'unavailable')}", {"tool": name, "result": {k: v for k, v in result.items() if k != "answer"}})
         return result
     raise ValueError("Unknown tool")
@@ -357,6 +365,7 @@ class App:
             messages = [{"role": "system", "content": system}]
             messages += [{"role": e["role"], "content": e["text"][:6000]} for e in prior]
             actions = []
+            used_outside = False
             for _ in range(8):
                 data = request_json(workshop.API + "/api/chat", {"model": "chief-of-staff", "messages": messages, "tools": tool_specs(include_reviewer), "stream": False, "options": {"num_ctx": 16384}}, timeout=600)
                 message = data.get("message", {})
@@ -365,6 +374,9 @@ class App:
                     answer = str(message.get("content") or "").strip() or "The local Manager returned no answer."
                     answer = self.polish_answer(qa_request, answer)
                     append_event(project, "assistant", answer, {"actions": actions})
+                    workshop.record_task_outcome("hybrid" if used_outside else "workshop",
+                                                 "responded", "workshop", project.name,
+                                                 recorded_by="manager")
                     return {"answer": answer, "actions": actions}
                 messages.append(message)
                 for call in calls[:3]:
@@ -375,6 +387,8 @@ class App:
                         if isinstance(arguments, str):
                             arguments = json.loads(arguments)
                         result = do_tool(self, project, name, arguments, qa_request)
+                        if name == "outside_help" and result.get("answer"):
+                            used_outside = True
                         detail = {"tool": name, "status": "ok", "summary": str(result)[:280]}
                     except (ValueError, OSError, KeyError, TypeError, HTTPError, URLError, TimeoutError, subprocess.TimeoutExpired) as exc:
                         result = {"error": str(exc)}
@@ -387,15 +401,24 @@ class App:
                     messages.append({"role": "tool", "tool_name": name, "content": json.dumps(result, ensure_ascii=False)[:16000]})
             answer = "I reached the local action limit for this turn. Review the actions and continue the project."
             append_event(project, "assistant", answer, {"actions": actions})
+            workshop.record_task_outcome("hybrid" if used_outside else "workshop",
+                                         "responded", "workshop", project.name,
+                                         recorded_by="manager")
             return {"answer": answer, "actions": actions}
         finally:
             self.lock.release()
 
-    def start_handoff(self, project: Path, prompt: str) -> None:
+    def start_handoff(self, project: Path, prompt: str, origin: str = "unknown") -> None:
+        workshop.record_routing("entered_workshop", "none", origin, project=project.name,
+                                recorded_by="launcher")
         def work():
             try:
                 self.respond(project, prompt)
             except Exception as exc:
+                workshop.record_routing("unavailable", "manager_error", origin,
+                                        project=project.name, recorded_by="manager")
+                workshop.record_task_outcome("workshop", "failed", "workshop",
+                                             project.name, recorded_by="manager")
                 append_event(project, "tool", f"Handoff could not finish: {exc}")
         threading.Thread(target=work, daemon=True).start()
 
@@ -425,7 +448,8 @@ def desktop_window(address: str) -> None:
     webview.start(icon=str(icon) if icon.is_file() else None)
 
 
-def serve(app: App, port: int = 0, initial: str = "", workspace: str = "", desktop: bool = False) -> None:
+def serve(app: App, port: int = 0, initial: str = "", workspace: str = "",
+          desktop: bool = False, origin: str = "unknown") -> None:
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, *args):
             return
@@ -489,7 +513,7 @@ def serve(app: App, port: int = 0, initial: str = "", workspace: str = "", deskt
                     if not prompt: raise ValueError("Handoff needs an objective")
                     title = str(body.get("title") or prompt[:48])
                     project = create_project(title, body.get("workspace"))
-                    app.start_handoff(project, prompt)
+                    app.start_handoff(project, prompt, str(body.get("origin") or "unknown"))
                     return self.send_json(200, {"id": project.name})
                 return self.send_json(404, {"error": "Not found"})
             except (ValueError, KeyError, TypeError, json.JSONDecodeError) as exc:
@@ -503,7 +527,7 @@ def serve(app: App, port: int = 0, initial: str = "", workspace: str = "", deskt
     except OSError: pass
     if initial:
         project = create_project(initial[:48], workspace or None)
-        app.start_handoff(project, initial)
+        app.start_handoff(project, initial, origin)
         address += f"&project={project.name}"
     print(address, flush=True)
     if desktop:
@@ -528,8 +552,13 @@ def serve(app: App, port: int = 0, initial: str = "", workspace: str = "", deskt
         except OSError: pass
 
 
-def launch(prompt: str = "", workspace: str = "", handoff: bool = False, desktop: bool = False) -> None:
+def launch(prompt: str = "", workspace: str = "", handoff: bool = False,
+           desktop: bool = False, origin: str = "unknown") -> None:
+    if not workshop.ROUTING_SURFACE.fullmatch(origin):
+        raise ValueError("Origin must be a short lowercase assistant label")
     if handoff and not App().preferences()["auto_handoff"]:
+        workshop.record_routing("unavailable", "auto_handoff_disabled", origin,
+                                recorded_by="launcher")
         print("AI Workshop automatic handoff is disabled. Continue in the current assistant.")
         return
     if INSTANCE.exists():
@@ -539,7 +568,7 @@ def launch(prompt: str = "", workspace: str = "", handoff: bool = False, desktop
             with urlopen(f"http://127.0.0.1:{port}/", timeout=1): pass
             address = f"http://127.0.0.1:{port}/#token={token}"
             if prompt:
-                data = request_json(f"http://127.0.0.1:{port}/api/handoff", {"prompt": prompt, "workspace": workspace or None}, {"X-Workshop-Token": token}, timeout=3)
+                data = request_json(f"http://127.0.0.1:{port}/api/handoff", {"prompt": prompt, "workspace": workspace or None, "origin": origin}, {"X-Workshop-Token": token}, timeout=3)
                 address += "&project=" + data["id"]
             if desktop:
                 try: desktop_window(address)
@@ -551,7 +580,7 @@ def launch(prompt: str = "", workspace: str = "", handoff: bool = False, desktop
             print(address)
             return
         except (OSError, ValueError, KeyError, URLError, HTTPError, json.JSONDecodeError): pass
-    serve(App(), initial=prompt, workspace=workspace, desktop=desktop)
+    serve(App(), initial=prompt, workspace=workspace, desktop=desktop, origin=origin)
 
 
 if __name__ == "__main__":
@@ -560,5 +589,6 @@ if __name__ == "__main__":
     parser.add_argument("--workspace", default="")
     parser.add_argument("--handoff", action="store_true", help="respect the saved automatic handoff preference")
     parser.add_argument("--desktop", action="store_true", help="open a standalone desktop window")
+    parser.add_argument("--origin", default="unknown", help="initiating assistant label for routing metrics")
     args = parser.parse_args()
-    launch(args.prompt, args.workspace, args.handoff, args.desktop)
+    launch(args.prompt, args.workspace, args.handoff, args.desktop, args.origin)

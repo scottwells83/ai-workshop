@@ -2,6 +2,13 @@
 
 This file records user-facing AI Workshop changes. Keep entries factual and update it when code, installers, or release documents change. The [current release](https://github.com/scottwells83/ai-workshop/tree/main/current%20release/) folder contains the installers and documents intended for download.
 
+## October 9 2026 Workshop-first routing and daily measurement
+
+- Updated universal and Gemini instructions to try local AI Workshop before substantive work in the initiating AI service when local access and automatic handoff are available.
+- Added private, prompt-free routing and task outcome records. The local interface records its responses and outside-AI escalations; local-capable assistants can record why Workshop was unavailable and who answered.
+- Added a one-day usage summary with executor percentages among logged responses and routing-gap counts. Cloud-only and unlogged requests remain outside that denominator.
+- Documented daily review and the limits of cross-platform coverage in the usage guide.
+
 ## October 9 2026 task-neutral Workshop scope
 
 - Clarified the universal, Gemini, and Workshop entry instructions: the workflow applies to every request regardless of topic or output. Simple requests remain lightweight and do not require unnecessary project folders or agent jobs.
