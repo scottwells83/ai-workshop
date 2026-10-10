@@ -2,6 +2,7 @@
 """Stage the public Linux installer payload without personal state."""
 
 from pathlib import Path
+import os
 import shutil
 import sys
 
@@ -19,7 +20,7 @@ PAYLOAD.mkdir(parents=True)
 FILES = (
     "AGENTS.md", "manager-instructions.md", "chatgpt-custom-instructions.md",
     "universal-custom-instructions.md", "universal-custom-instructions-short.md", "gemini-ai-workshop-instructions.md", "README.md", "RELEASE_NOTES.md", "SETUP_GUIDE.md", "USER_MANUAL.md", "CHANGELOG.md", "RELEASE_READINESS.md",
-    "Modelfile", "Modelfile.drafter", "workshop.py", "workshop_app.py", "desktop_setup.py", "workshop.sh", "Open AI Workshop.sh",
+    "Modelfile", "Modelfile.drafter", "workshop.py", "workshop_app.py", "ollama_runtime.py", "desktop_setup.py", "workshop.sh", "Open AI Workshop.sh",
     "Install AI Workshop.sh", "create-agents.sh", "templates/project.md",
     ".github/copilot-instructions.md",
 )
@@ -29,6 +30,21 @@ for name in FILES:
     shutil.copy2(ROOT / name, target)
 for name in ("agents", "guides", "ui"):
     shutil.copytree(ROOT / name, PAYLOAD / name)
+BUNDLE = os.environ.get("AI_WORKSHOP_OLLAMA_BUNDLE")
+ARCHIVE = os.environ.get("AI_WORKSHOP_OLLAMA_ARCHIVE")
+if ARCHIVE:
+    source = Path(ARCHIVE).resolve()
+    if not source.is_file():
+        raise SystemExit("Bundled Ollama archive is missing")
+    runtime = PAYLOAD / "runtime"
+    runtime.mkdir()
+    shutil.copy2(source, runtime / "ollama.tar.zst")
+    shutil.copy2(ROOT / "installer" / "OLLAMA-LICENSE.txt", runtime / "OLLAMA-LICENSE.txt")
+elif BUNDLE:
+    source = Path(BUNDLE).resolve()
+    if not (source / "entrypoint.txt").is_file():
+        raise SystemExit("Bundled Ollama entrypoint is missing")
+    shutil.copytree(source, PAYLOAD / "runtime" / "ollama")
 (PAYLOAD / "desktop").mkdir()
 shutil.copy2(ROOT / "desktop" / "linux" / "ai-workshop.svg", PAYLOAD / "desktop" / "ai-workshop.svg")
 for name in ("projects", "memory"):

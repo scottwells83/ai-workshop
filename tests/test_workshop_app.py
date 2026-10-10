@@ -1,6 +1,8 @@
 import unittest
+from unittest.mock import Mock, patch
 
-from workshop_app import draft_warnings, normalize_brief
+import workshop_app
+from workshop_app import App, draft_warnings, normalize_brief
 
 
 class BriefNormalizationTests(unittest.TestCase):
@@ -34,6 +36,83 @@ class DraftWarningTests(unittest.TestCase):
 
     def test_does_not_apply_pda_rule_to_unrelated_task(self):
         self.assertEqual([], draft_warnings("Compile a Python file", "You should run a check."))
+
+
+class HandoffReuseTests(unittest.TestCase):
+    def test_existing_window_shows_new_project(self):
+        app = App()
+        app.address = "http://127.0.0.1:1234/#token=example"
+        app.window = Mock()
+
+        self.assertTrue(app.focus_project("new-project"))
+        app.window.load_url.assert_called_once_with(app.address + "&project=new-project")
+        app.window.restore.assert_called_once_with()
+        app.window.show.assert_called_once_with()
+
+    def test_existing_instance_does_not_create_desktop_window(self):
+        instance = Mock()
+        instance.exists.return_value = True
+        instance.read_text.return_value = '{"port": 1234, "token": "example"}'
+        response = Mock()
+        response.__enter__ = Mock(return_value=response)
+        response.__exit__ = Mock(return_value=False)
+
+        with patch.object(workshop_app, "INSTANCE", instance), \
+             patch.object(workshop_app, "urlopen", return_value=response), \
+             patch.object(workshop_app, "request_json", return_value={"id": "new-project", "focused": True}), \
+             patch.object(workshop_app, "desktop_window") as create_window, \
+             patch.object(workshop_app.webbrowser, "open") as open_browser:
+            workshop_app.launch("New objective", handoff=True, desktop=True, origin="codex")
+
+        create_window.assert_not_called()
+        open_browser.assert_not_called()
+
+    def test_older_instance_uses_its_server_without_new_desktop_window(self):
+        instance = Mock()
+        instance.exists.return_value = True
+        instance.read_text.return_value = '{"port": 1234, "token": "example"}'
+        response = Mock()
+        response.__enter__ = Mock(return_value=response)
+        response.__exit__ = Mock(return_value=False)
+
+        with patch.object(workshop_app, "INSTANCE", instance), \
+             patch.object(workshop_app, "urlopen", return_value=response), \
+             patch.object(workshop_app, "request_json", return_value={"id": "new-project"}), \
+             patch.object(workshop_app, "desktop_window") as create_window, \
+             patch.object(workshop_app.webbrowser, "open") as open_browser, \
+             patch.object(workshop_app, "serve") as serve:
+            workshop_app.launch("New objective", handoff=True, desktop=True, origin="codex")
+
+        create_window.assert_not_called()
+        serve.assert_not_called()
+        open_browser.assert_called_once_with("http://127.0.0.1:1234/#token=example&project=new-project")
+
+    def test_no_instance_starts_server(self):
+        with patch.object(workshop_app, "INSTANCE") as instance, \
+             patch.object(workshop_app, "serve") as serve:
+            instance.exists.return_value = False
+            workshop_app.launch("New objective", handoff=True, desktop=True, origin="codex")
+
+        serve.assert_called_once()
+        self.assertEqual("New objective", serve.call_args.kwargs["initial"])
+        self.assertTrue(serve.call_args.kwargs["desktop"])
+
+    def test_handoff_error_does_not_start_another_instance(self):
+        instance = Mock()
+        instance.exists.return_value = True
+        instance.read_text.return_value = '{"port": 1234, "token": "example"}'
+        response = Mock()
+        response.__enter__ = Mock(return_value=response)
+        response.__exit__ = Mock(return_value=False)
+
+        with patch.object(workshop_app, "INSTANCE", instance), \
+             patch.object(workshop_app, "urlopen", return_value=response), \
+             patch.object(workshop_app, "request_json", side_effect=RuntimeError("handoff failed")), \
+             patch.object(workshop_app, "serve") as serve:
+            with self.assertRaisesRegex(RuntimeError, "handoff failed"):
+                workshop_app.launch("New objective", handoff=True, desktop=True, origin="codex")
+
+        serve.assert_not_called()
 
 
 if __name__ == "__main__":

@@ -2,6 +2,7 @@
 """Stage the public Windows installer payload without personal projects or memory."""
 
 from pathlib import Path
+import os
 import shutil
 import sys
 
@@ -10,7 +11,7 @@ DEST = Path(sys.argv[1]).resolve() if len(sys.argv) == 2 else ROOT / "dist" / "w
 FILES = (
     "AGENTS.md", "manager-instructions.md", "chatgpt-custom-instructions.md",
     "universal-custom-instructions.md", "universal-custom-instructions-short.md", "gemini-ai-workshop-instructions.md",
-    "README.md", "RELEASE_NOTES.md", "SETUP_GUIDE.md", "USER_MANUAL.md", "CHANGELOG.md", "RELEASE_READINESS.md", "Modelfile", "Modelfile.drafter", "workshop.py", "workshop_app.py", "desktop_setup.py", "workshop.cmd", "Open AI Workshop.cmd",
+    "README.md", "RELEASE_NOTES.md", "SETUP_GUIDE.md", "USER_MANUAL.md", "CHANGELOG.md", "RELEASE_READINESS.md", "Modelfile", "Modelfile.drafter", "workshop.py", "workshop_app.py", "ollama_runtime.py", "desktop_setup.py", "workshop.cmd", "Open AI Workshop.cmd",
     "Install AI Workshop.cmd", "install-windows.ps1",
     ".github/copilot-instructions.md",
     "templates/project.md",
@@ -28,6 +29,12 @@ for name in FILES:
     shutil.copy2(ROOT / name, target)
 for name in DIRECTORIES:
     shutil.copytree(ROOT / name, DEST / name)
+BUNDLE = os.environ.get("AI_WORKSHOP_OLLAMA_BUNDLE")
+if BUNDLE:
+    source = Path(BUNDLE).resolve()
+    if not (source / "entrypoint.txt").is_file():
+        raise SystemExit("Bundled Ollama entrypoint is missing")
+    shutil.copytree(source, DEST / "runtime" / "ollama")
 (DEST / "desktop" / "windows").mkdir(parents=True)
 shutil.copy2(ROOT / "desktop" / "windows" / "AIWorkshop.ico", DEST / "desktop" / "windows" / "AIWorkshop.ico")
 for name in ("projects", "memory"):

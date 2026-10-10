@@ -1,28 +1,28 @@
 # AI Workshop setup guide
 
-October 8, 2026 prerelease
+October 9, 2026 development build
 
-This guide covers installing AI Workshop on Windows, macOS, and Linux, adding its shared instructions to AI assistants, and opening the local workspace. The installers need internet access to fetch dependencies and model weights. They do not include personal projects, memory, usage logs, Ollama model blobs, or Python runtimes. Clean-machine first-run setup still needs validation.
+This guide covers installing AI Workshop on Windows, macOS, and Linux, adding its shared instructions to AI assistants, and opening the local workspace. The next installer builds include a checksum-verified Ollama CLI. First launch downloads missing model weights. Packages do not include personal projects, memory, usage logs, model blobs, or Python runtimes. Clean-machine first-run setup still needs validation. Published current-release links below still point to the previous build until a new release is approved.
 
 ## Install AI Workshop
 
-### Windows
+### Windows (x86-64 development build)
 
 1. Download [AI-Workshop-Windows-Setup.exe](https://github.com/scottwells83/ai-workshop/blob/main/current%20release/AI-Workshop-Windows-Setup.exe) and open it.
-2. Setup places the Workshop at `%USERPROFILE%\ai-workshop`. It downloads Ollama, creates the seven required Workshop models, supplies Python 3.11 through uv when needed, and runs the Workshop doctor check. Internet access is required. Docker Desktop and Open WebUI are optional.
+2. Setup places the Workshop at `%USERPROFILE%\ai-workshop`. It includes Ollama and supplies Python 3.11 through uv when needed. On first launch, Workshop starts Ollama in the background and prepares seven local models. Model downloads require internet access. Docker Desktop and Open WebUI are not installed.
 3. Keep the setup output if it reports a dependency or permission step that still needs attention. The EXE is unsigned, so Windows may show a publisher warning.
 
 ### macOS
 
 1. Download [AI-Workshop-macOS.dmg](https://github.com/scottwells83/ai-workshop/blob/main/current%20release/AI-Workshop-macOS.dmg), open it, then double-click `ai-workshop/Install AI Workshop.command` inside it.
-2. Setup places the Workshop at `~/ai-workshop`, installs Ollama if needed, creates the seven required models, makes Python 3.11 available through uv when needed, and runs the doctor check. Internet access is required. Docker Desktop and Open WebUI are optional.
+2. Setup places the Workshop at `~/ai-workshop`, includes Ollama and makes Python 3.11 available through uv when needed. On first launch, Workshop prepares its local models; model downloads require internet access. Docker Desktop and Open WebUI are not installed.
 3. The DMG is unsigned and unnotarized, so macOS may ask you to approve opening it. Keep the setup output if any dependency needs attention.
 
-### Linux
+### Linux (x86-64 development build)
 
-1. Download [AI-Workshop-Linux-Setup.run](https://github.com/scottwells83/ai-workshop/blob/main/current%20release/AI-Workshop-Linux-Setup.run). Ask a local-capable assistant to run it, or execute it in a terminal. Bash, tar, awk, and curl are bootstrap requirements.
-2. Setup places the Workshop at `~/ai-workshop`, installs [Ollama](https://ollama.com/download) if missing, creates the seven required models, supplies Python 3.11 through uv when needed, and runs the doctor check. Internet access is required. Ollama's official installer may request system permission.
-3. Docker and Open WebUI are optional and are not installed by the Linux setup. If you only want to check the package, run the file with `--verify-only`; this does not install dependencies.
+1. Download [AI-Workshop-Linux-Setup.run](https://github.com/scottwells83/ai-workshop/blob/main/current%20release/AI-Workshop-Linux-Setup.run). Ask a local-capable assistant to run it, or execute it in a terminal. Bash, tar, and awk are bootstrap requirements. The installer adds the small zstd archive decoder through the system package manager when missing; that step may request administrator permission.
+2. Setup places the Workshop at `~/ai-workshop`, includes Ollama and supplies Python 3.11 through uv when needed. On first launch, Workshop prepares its local models; model downloads require internet access.
+3. Docker and Open WebUI are not installed by any setup. If you only want to check the package, run the file with `--verify-only`; this does not install dependencies.
 
 Existing Workshop folders are preserved by the Windows and macOS setup launchers. Review source updates before replacing customized files. Personal memory and project data must be transferred separately through a private channel.
 
@@ -63,7 +63,7 @@ OpenCode, Cursor, and GitHub Copilot are optional applications, not runtime depe
 
 ## Open the local workspace
 
-The package now includes a separate AI Workshop desktop window. Double-click `AI Workshop.app` or `Open AI Workshop.command` on macOS, use the AI Workshop Start menu shortcut or `Open AI Workshop.cmd` on Windows, or choose AI Workshop from the Linux applications menu. A browser fallback is available if the desktop web view cannot start. Its Manager uses Ollama for project chat and can inspect scoped files, run bounded checks, create temporary local-agent jobs, and record project notes. OpenAI, Claude, and Gemini API escalation is optional and off by default; API keys are held only in the running process.
+The package now includes a separate AI Workshop desktop window. Double-click `AI Workshop.app` or `Open AI Workshop.command` on macOS, use the AI Workshop Start menu shortcut or `Open AI Workshop.cmd` on Windows, or choose AI Workshop from the Linux applications menu. The launcher reuses a running Workshop window for later handoffs and starts a new instance only when needed. A browser fallback is available if the desktop web view cannot start. Its Manager uses Ollama for project chat and can inspect scoped files, run bounded checks, create temporary local-agent jobs, and record project notes. OpenAI, Claude, and Gemini API escalation is optional and off by default; API keys are held only in the running process.
 
 In **Settings**, uncheck **Open AI Workshop automatically for new work** to disable assistant-initiated handoff. Manual launch still works. The universal instructions describe the handoff command for assistants with local execution; a cloud-only chat cannot start a program on your computer. This is an app preview. Recovery, provider validation, first-run installation, and full end-to-end QA still need work before complete release. See [RELEASE_READINESS.md](RELEASE_READINESS.md).
 

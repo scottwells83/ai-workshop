@@ -1,6 +1,17 @@
+## October 9 2026 one-window local runtime (development)
+
+- Installer builds now fetch a pinned, checksum-verified Ollama CLI and include it in the payload. Workshop starts and stops the helper on a private loopback port, reuses existing model files, and prepares missing local roles on first launch.
+- Standard setup no longer installs, opens, or starts Docker Desktop, Open WebUI, or a separate Ollama app. The Linux package uses zstd compression to stay within GitHub release asset limits; its unpacker may need to install zstd. The Workshop UI shows model setup progress and errors.
+- Published current-release installers have not been replaced; cross-platform first-run validation remains outstanding.
+
 # Changelog
 
 This file records user-facing AI Workshop changes. Keep entries factual and update it when code, installers, or release documents change. The [current release](https://github.com/scottwells83/ai-workshop/tree/main/current%20release/) folder contains the installers and documents intended for download.
+
+## October 9 2026 running-window handoff reuse
+
+- Handoffs now send new prompts to an existing Workshop server and bring its desktop window forward instead of opening another window. A new process starts only when no reachable instance is available.
+- A handoff error from a reachable instance no longer triggers a second server. The source fix is installed locally; the published installers still need rebuilding before distribution.
 
 ## October 9 2026 Workshop-first routing and daily measurement
 

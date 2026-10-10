@@ -10,6 +10,7 @@ on:
       - 'workshop.cmd'
       - 'workshop.py'
       - 'workshop_app.py'
+      - 'ollama_runtime.py'
       - 'desktop_setup.py'
       - 'desktop/**'
       - 'Open AI Workshop.cmd'

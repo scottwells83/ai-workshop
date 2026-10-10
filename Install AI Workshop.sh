@@ -36,37 +36,20 @@ if [[ ! -e "$HOME/.copilot/copilot-instructions.md" ]]; then
   echo 'Added GitHub Copilot CLI user instructions.'
 fi
 
-command -v curl >/dev/null 2>&1 || {
-  echo 'curl is required to install missing Linux dependencies.' >&2
-  exit 1
-}
-if ! command -v ollama >/dev/null 2>&1; then
-  echo 'Installing Ollama from its official installer...'
-  OLLAMA_TMP="$(mktemp)"
-  trap 'rm -f "$OLLAMA_TMP"' EXIT
-  curl -fsSL https://ollama.com/install.sh -o "$OLLAMA_TMP"
-  sh "$OLLAMA_TMP"
-  rm -f "$OLLAMA_TMP"
-  trap - EXIT
+if [[ ! -f "$DEST/runtime/ollama/entrypoint.txt" && -f "$DEST/runtime/ollama.tar.zst" ]]; then
+  echo 'Preparing the bundled Ollama helper...'
+  printf '%s  %s\n' '726bee78706c281b0eeef00746efe51a044d71c592c3f0b195820707f31fdf04' "$DEST/runtime/ollama.tar.zst" | sha256sum -c -
+  mkdir -p "$DEST/runtime/ollama"
+  zstd -dc "$DEST/runtime/ollama.tar.zst" | tar -xf - -C "$DEST/runtime/ollama"
+  printf 'bin/ollama\n' > "$DEST/runtime/ollama/entrypoint.txt"
+  cp "$DEST/runtime/OLLAMA-LICENSE.txt" "$DEST/runtime/ollama/OLLAMA-LICENSE.txt"
+  rm "$DEST/runtime/ollama.tar.zst"
 fi
-command -v ollama >/dev/null 2>&1 || {
-  echo 'Ollama command unavailable after installation.' >&2
-  exit 1
-}
-
-if ! curl -fsS --max-time 2 http://127.0.0.1:11434/api/tags >/dev/null 2>&1; then
-  nohup ollama serve >"$DEST/ollama-startup.log" 2>&1 &
-fi
-for _ in {1..30}; do
-  if curl -fsS --max-time 2 http://127.0.0.1:11434/api/tags >/dev/null 2>&1; then break; fi
-  sleep 2
-done
-if ! curl -fsS --max-time 2 http://127.0.0.1:11434/api/tags >/dev/null 2>&1; then
-  echo 'Ollama did not start. Start the Ollama service, then rerun setup.' >&2
+if [[ ! -f "$DEST/runtime/ollama/entrypoint.txt" ]]; then
+  echo 'This package is missing its bundled Ollama helper.' >&2
   exit 1
 fi
 
-bash "$DEST/create-agents.sh"
 if ! command -v python3 >/dev/null 2>&1 ||
    ! python3 -c 'import sys; assert sys.version_info >= (3, 11)' >/dev/null 2>&1; then
   UV="$HOME/.local/bin/uv"
@@ -83,7 +66,6 @@ if ! command -v python3 >/dev/null 2>&1 ||
   "$UV" python install 3.11
 fi
 
-bash "$DEST/workshop.sh" doctor
 bash "$DEST/workshop.sh" desktop-setup
 mkdir -p "$HOME/.local/share/applications"
 cat > "$HOME/.local/share/applications/ai-workshop.desktop" <<EOF
@@ -97,4 +79,4 @@ Terminal=false
 Categories=Office;Utility;
 EOF
 echo "Workshop ready at $DEST"
-echo 'Docker and Open WebUI are optional and are not installed by this Linux setup.'
+echo 'Open AI Workshop to prepare local models. Docker and Open WebUI are not installed.'

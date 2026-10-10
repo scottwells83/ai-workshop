@@ -2,12 +2,21 @@ $ErrorActionPreference = 'Stop'
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 $stage = Join-Path $env:TEMP 'ai-workshop-windows-stage'
 $output = Join-Path $root 'dist\windows'
+$bundle = Join-Path $env:TEMP 'ai-workshop-windows-ollama'
 
 $python = Get-Command py -ErrorAction SilentlyContinue
-if ($python) { & py -3 (Join-Path $PSScriptRoot 'stage.py') $stage }
+if ($python) {
+    & py -3 (Join-Path $root 'installer\fetch_ollama.py') windows $bundle
+    if ($LASTEXITCODE -ne 0) { throw 'Bundled Ollama download failed.' }
+    $env:AI_WORKSHOP_OLLAMA_BUNDLE = $bundle
+    & py -3 (Join-Path $PSScriptRoot 'stage.py') $stage
+}
 else {
     $python = Get-Command python -ErrorAction SilentlyContinue
     if (-not $python) { throw 'Python 3 is required to build the installer.' }
+    & python (Join-Path $root 'installer\fetch_ollama.py') windows $bundle
+    if ($LASTEXITCODE -ne 0) { throw 'Bundled Ollama download failed.' }
+    $env:AI_WORKSHOP_OLLAMA_BUNDLE = $bundle
     & python (Join-Path $PSScriptRoot 'stage.py') $stage
 }
 if ($LASTEXITCODE -ne 0) { throw 'Payload staging failed.' }

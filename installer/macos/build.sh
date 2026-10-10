@@ -5,6 +5,8 @@ STAGE="$(mktemp -d "${TMPDIR:-/tmp}/ai-workshop-macos.XXXXXX")"
 trap 'rm -rf "$STAGE"' EXIT
 OUTPUT="${1:-$ROOT/dist/macos/AI-Workshop-macOS.dmg}"
 mkdir -p "$(dirname "$OUTPUT")"
+python3 "$ROOT/installer/fetch_ollama.py" macos "$STAGE/ollama"
+export AI_WORKSHOP_OLLAMA_BUNDLE="$STAGE/ollama"
 python3 "$ROOT/installer/macos/stage.py" "$STAGE/payload"
 hdiutil create -volname 'AI Workshop' -srcfolder "$STAGE/payload" -ov -format UDZO "$OUTPUT"
 hdiutil verify "$OUTPUT"

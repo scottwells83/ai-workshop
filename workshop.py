@@ -13,11 +13,12 @@ import re
 import shutil
 import sys
 import time
+import ollama_runtime
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 ROOT = Path(__file__).resolve().parent
-API = "http://127.0.0.1:11434"
+API = ollama_runtime.api_url()
 ID = re.compile(r"^[a-z][a-z0-9_-]{0,63}$")
 MODELS = {
     "local-worker", "local-drafter", "chief-of-staff", "watcher",
@@ -566,7 +567,13 @@ def main() -> int:
             print(create_project(args.name))
             return 0
         if args.command == "run":
-            return run_jobs(resolve_project(args.project), args.force)
+            owned = ollama_runtime.start() if ollama_runtime.executable() else None
+            try:
+                if ollama_runtime.executable():
+                    ollama_runtime.ensure_models(lambda message: print(message, flush=True))
+                return run_jobs(resolve_project(args.project), args.force)
+            finally:
+                ollama_runtime.stop(owned)
         if args.command == "app":
             from workshop_app import launch
             launch(args.prompt, args.workspace, args.handoff, args.desktop, args.origin)
@@ -585,8 +592,12 @@ def main() -> int:
             if args.usage_command == "task":
                 return log_task_outcome(args)
             return usage_summary(args.project, args.since, args.through, args.day)
-        return doctor()
-    except (ValueError, OSError, json.JSONDecodeError) as exc:
+        owned = ollama_runtime.start() if ollama_runtime.executable() else None
+        try:
+            return doctor()
+        finally:
+            ollama_runtime.stop(owned)
+    except (ValueError, OSError, RuntimeError, json.JSONDecodeError) as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 2
 

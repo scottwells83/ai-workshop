@@ -11,6 +11,7 @@ on:
       - 'create-agents.sh'
       - 'workshop.py'
       - 'workshop_app.py'
+      - 'ollama_runtime.py'
       - 'desktop_setup.py'
       - 'desktop/**'
       - 'tests/**'
@@ -42,6 +43,7 @@ on:
       - 'create-agents.sh'
       - 'workshop.py'
       - 'workshop_app.py'
+      - 'ollama_runtime.py'
       - 'desktop_setup.py'
       - 'desktop/**'
       - 'tests/**'
@@ -74,6 +76,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Check script syntax
         run: bash -n 'Install AI Workshop.sh' 'Open AI Workshop.sh' workshop.sh create-agents.sh
+      - name: Install archive decoder
+        run: sudo apt-get update && sudo apt-get install -y zstd
       - name: Check app behavior
         run: python3 -m unittest discover -s tests -v
       - name: Build installer

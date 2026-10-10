@@ -314,6 +314,46 @@ class App:
         self.token = secrets.token_urlsafe(32)
         self.lock = threading.Lock()
         self.provider = {"enabled": False, "kind": "openai", "model": "", "key": ""}
+        self.window = None
+        self.address = ""
+        self.ollama_phase = "checking"
+        self.ollama_message = "Checking local models…"
+        self.ollama_ready = threading.Event()
+        self.ollama_process = None
+
+    def prepare_ollama(self) -> None:
+        if workshop.ollama_runtime.executable() is None:
+            self.ollama_phase = "ready" if workshop.ollama_runtime.healthy() else "unavailable"
+            self.ollama_message = "Ollama ready" if self.ollama_phase == "ready" else "Ollama unavailable"
+            self.ollama_ready.set()
+            return
+        def work():
+            try:
+                self.ollama_phase = "starting"
+                self.ollama_message = "Starting local models…"
+                self.ollama_process = workshop.ollama_runtime.start()
+                self.ollama_phase = "preparing"
+                workshop.ollama_runtime.ensure_models(lambda message: setattr(self, "ollama_message", message))
+                self.ollama_phase = "ready"
+                self.ollama_message = "Local models ready"
+            except Exception as exc:
+                self.ollama_phase = "error"
+                self.ollama_message = str(exc)
+            finally:
+                self.ollama_ready.set()
+        threading.Thread(target=work, daemon=True).start()
+
+    def focus_project(self, project_id: str = "") -> bool:
+        if self.window is None:
+            return False
+        try:
+            if project_id:
+                self.window.load_url(self.address + "&project=" + project_id)
+            self.window.restore()
+            self.window.show()
+            return True
+        except (OSError, RuntimeError):
+            return False
 
     def preferences(self) -> dict:
         try:
@@ -346,6 +386,10 @@ class App:
         if not self.lock.acquire(blocking=False):
             raise ValueError("Manager is busy with another request")
         try:
+            if workshop.ollama_runtime.executable() is not None:
+                self.ollama_ready.wait()
+                if self.ollama_phase != "ready":
+                    raise RuntimeError(self.ollama_message)
             append_event(project, "user", prompt)
             include_reviewer = reviewer_available()
             prior = [e for e in history(project) if e["role"] in {"user", "assistant"}][-8:]
@@ -423,7 +467,7 @@ class App:
         threading.Thread(target=work, daemon=True).start()
 
 
-def desktop_window(address: str) -> None:
+def desktop_window(address: str, app: App) -> None:
     import webview
     if sys.platform == "darwin":
         icon = ROOT / "AI Workshop.app" / "Contents" / "Resources" / "AIWorkshop.icns"
@@ -442,9 +486,9 @@ def desktop_window(address: str) -> None:
         except (ImportError, AttributeError):
             pass
 
-    webview.create_window("AI Workshop", address, width=1280, height=840,
-                          min_size=(680, 520), background_color="#0b1018",
-                          text_select=True)
+    app.window = webview.create_window("AI Workshop", address, width=1280, height=840,
+                                       min_size=(680, 520), background_color="#0b1018",
+                                       text_select=True)
     webview.start(icon=str(icon) if icon.is_file() else None)
 
 
@@ -472,7 +516,7 @@ def serve(app: App, port: int = 0, initial: str = "", workspace: str = "",
             if not self.authorized():
                 return self.send_json(403, {"error": "Not authorized"})
             if self.path == "/api/state":
-                return self.send_json(200, {"projects": list_projects(), "provider": {k:v for k,v in app.provider.items() if k != "key"}, "provider_has_key": bool(app.provider["key"]), "ollama": self.ollama_status(), "preferences": app.preferences()})
+                return self.send_json(200, {"projects": list_projects(), "provider": {k:v for k,v in app.provider.items() if k != "key"}, "provider_has_key": bool(app.provider["key"]), "ollama": app.ollama_phase == "ready" and self.ollama_status(), "ollama_phase": app.ollama_phase, "ollama_message": app.ollama_message, "preferences": app.preferences()})
             if self.path.startswith("/api/history/"):
                 try: return self.send_json(200, {"history": history(project_path(self.path.split("/")[-1]))})
                 except ValueError as exc: return self.send_json(400, {"error": str(exc)})
@@ -514,14 +558,22 @@ def serve(app: App, port: int = 0, initial: str = "", workspace: str = "",
                     title = str(body.get("title") or prompt[:48])
                     project = create_project(title, body.get("workspace"))
                     app.start_handoff(project, prompt, str(body.get("origin") or "unknown"))
-                    return self.send_json(200, {"id": project.name})
+                    return self.send_json(200, {"id": project.name,
+                                                "focused": app.focus_project(project.name)})
+                if self.path == "/api/focus":
+                    project_id = str(body.get("project") or "")
+                    if project_id:
+                        project_path(project_id)
+                    return self.send_json(200, {"focused": app.focus_project(project_id)})
                 return self.send_json(404, {"error": "Not found"})
             except (ValueError, KeyError, TypeError, json.JSONDecodeError) as exc:
                 return self.send_json(400, {"error": str(exc)})
             except (OSError, URLError, HTTPError, RuntimeError) as exc:
                 return self.send_json(500, {"error": str(exc)})
     server = ThreadingHTTPServer(("127.0.0.1", port), Handler)
+    app.prepare_ollama()
     address = f"http://127.0.0.1:{server.server_address[1]}/#token={app.token}"
+    app.address = address
     INSTANCE.write_text(json.dumps({"port": server.server_address[1], "token": app.token, "pid": os.getpid()}), encoding="utf-8")
     try: INSTANCE.chmod(0o600)
     except OSError: pass
@@ -534,7 +586,7 @@ def serve(app: App, port: int = 0, initial: str = "", workspace: str = "",
         thread = threading.Thread(target=server.serve_forever, daemon=True)
         thread.start()
         try:
-            desktop_window(address)
+            desktop_window(address, app)
         except (ImportError, RuntimeError, OSError) as exc:
             print(f"Desktop window unavailable ({exc}); opening the browser.", file=sys.stderr)
             webbrowser.open(address)
@@ -546,6 +598,7 @@ def serve(app: App, port: int = 0, initial: str = "", workspace: str = "",
     try: server.shutdown()
     finally:
         server.server_close()
+        workshop.ollama_runtime.stop(app.ollama_process)
         try:
             if json.loads(INSTANCE.read_text(encoding="utf-8")).get("token") == app.token:
                 INSTANCE.unlink()
@@ -561,25 +614,34 @@ def launch(prompt: str = "", workspace: str = "", handoff: bool = False,
                                 recorded_by="launcher")
         print("AI Workshop automatic handoff is disabled. Continue in the current assistant.")
         return
+    existing = None
     if INSTANCE.exists():
         try:
             info = json.loads(INSTANCE.read_text(encoding="utf-8"))
             port, token = int(info["port"]), str(info["token"])
-            with urlopen(f"http://127.0.0.1:{port}/", timeout=1): pass
-            address = f"http://127.0.0.1:{port}/#token={token}"
-            if prompt:
-                data = request_json(f"http://127.0.0.1:{port}/api/handoff", {"prompt": prompt, "workspace": workspace or None, "origin": origin}, {"X-Workshop-Token": token}, timeout=3)
-                address += "&project=" + data["id"]
-            if desktop:
-                try: desktop_window(address)
-                except (ImportError, RuntimeError, OSError) as exc:
-                    print(f"Desktop window unavailable ({exc}); opening the browser.", file=sys.stderr)
-                    webbrowser.open(address)
-            else:
-                webbrowser.open(address)
-            print(address)
-            return
-        except (OSError, ValueError, KeyError, URLError, HTTPError, json.JSONDecodeError): pass
+            req = Request(f"http://127.0.0.1:{port}/api/state",
+                          headers={"X-Workshop-Token": token})
+            with urlopen(req, timeout=1):
+                existing = (port, token)
+        except (OSError, ValueError, KeyError, URLError, HTTPError, json.JSONDecodeError):
+            pass
+    if existing:
+        port, token = existing
+        address = f"http://127.0.0.1:{port}/#token={token}"
+        if prompt:
+            data = request_json(f"http://127.0.0.1:{port}/api/handoff", {"prompt": prompt, "workspace": workspace or None, "origin": origin}, {"X-Workshop-Token": token}, timeout=3)
+            address += "&project=" + data["id"]
+        else:
+            try:
+                data = request_json(f"http://127.0.0.1:{port}/api/focus", {}, {"X-Workshop-Token": token}, timeout=3)
+            except HTTPError as exc:
+                if exc.code != 404:
+                    raise
+                data = {"focused": False}  # Older running instances lack this endpoint.
+        if not data.get("focused"):
+            webbrowser.open(address)
+        print(address)
+        return
     serve(App(), initial=prompt, workspace=workspace, desktop=desktop, origin=origin)
 
 

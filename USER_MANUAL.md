@@ -1,6 +1,6 @@
 # AI Workshop user manual
 
-October 8, 2026 prerelease
+October 9, 2026 development build
 
 This manual covers everyday use of the local AI Workshop Manager. Use the [setup guide](SETUP_GUIDE.md) for installation and assistant-specific custom-instruction placement; use the [release notes](RELEASE_NOTES.md) for changes and known limits.
 
@@ -10,7 +10,7 @@ This manual covers everyday use of the local AI Workshop Manager. Use the [setup
 - **Windows:** Use the **AI Workshop** Start menu shortcut or `Open AI Workshop.cmd` in `%USERPROFILE%\ai-workshop`.
 - **Linux:** Choose AI Workshop from the applications menu or launch `Open AI Workshop.sh` in `~/ai-workshop`.
 
-The launcher opens a separate desktop window when its web view is available; otherwise it opens the local browser interface. The Manager runs on your computer through Ollama. Wait for **Ollama ready** before starting a local chat. If Ollama is unavailable, use the installation check described in the setup guide.
+The launcher opens a separate desktop window when its web view is available; otherwise it opens the local browser interface. The Manager runs on your computer through Ollama. Wait for **Local models ready** before starting a local chat. First launch may download several gigabytes of model weights. Workshop starts its bundled Ollama helper in the background; if setup fails, the status area shows the error.
 
 ## Start a project
 
@@ -29,7 +29,7 @@ For a coding task, point the project at the relevant repository and state the ex
 
 ## Optional handoff from another assistant
 
-Your universal instructions can direct a local-capable ChatGPT, Codex, Claude, Gemini, Muse Code, OpenCode, Cursor, or Copilot session to launch AI Workshop for continuing work. In **Settings**, **Open AI Workshop automatically for new work** controls this behavior. Turn it off to keep work in the current assistant; manual launch still works. Online chats without local execution cannot open an app on your computer. The assistant should say whether it actually read the Workshop files and launched the app.
+Your universal instructions can direct a local-capable ChatGPT, Codex, Claude, Gemini, Muse Code, OpenCode, Cursor, or Copilot session to open AI Workshop for continuing work. The launcher brings the existing Workshop window forward for a new handoff and starts a new instance only when none is running. In **Settings**, **Open AI Workshop automatically for new work** controls this behavior. Turn it off to keep work in the current assistant; manual launch still works. Online chats without local execution cannot open an app on your computer. The assistant should say whether it actually read the Workshop files and launched the app.
 
 ## Optional outside AI
 
@@ -41,7 +41,7 @@ Install AI Workshop on the new computer first. The installer provides the Worksh
 
 ## If something goes wrong
 
-- If **Ollama unavailable** appears, ask a local-capable assistant to run the Workshop `doctor` check and report the exact failure. Confirm that Ollama is running and the required models are installed before retrying.
+- If the local model status shows an error, ask a local-capable assistant to run the Workshop `doctor` check and report the exact failure. Check the status area and the Workshop Ollama log, then retry.
 - If a local job or command fails, inspect **Recent actions** and the Manager response. Ask the Manager to inspect the project run report and output, correct the issue, and rerun only the affected step.
 - If the desktop window does not open, use the browser fallback from the launcher. It still uses the local Workshop service.
 - If an online assistant claims it launched AI Workshop, ask what local execution tool it used. A browser-only chat cannot start a local process by itself.
